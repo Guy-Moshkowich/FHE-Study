@@ -40,6 +40,9 @@ class BGV:
     def modulo(self, poly, mod):
         return Polynomial([x % mod for x in poly.coef])
 
+    def add(self, ctx1, ctx2):
+        return Ciphertext(ctx1.c0 + ctx2.c0, ctx1.c1 + ctx2.c1)
+
 
 class Ciphertext:
 
@@ -47,4 +50,9 @@ class Ciphertext:
         self.c0 = c0
         self.c1 = c1
 
+    def __add__(self, other):
+        return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)
 
+
+    def __str__(self):
+        return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)
