@@ -3,53 +3,48 @@ from numpy.polynomial import Polynomial
 import numpy as np
 
 
-p = 2
-q = 1000
-m = 16 # Phi_16(X)=x^8+1
-secret_key = Polynomial([random.randrange(0,q) for i in range(0, m//2)])
+class BGV:
+    minor_range = 5
 
-def get_cyclotomic(m):
-    phi_m = [0]*(m//2 + 1)
-    phi_m[0] = 1
-    phi_m[-1]=1
-    return Polynomial(phi_m)
+    def __init__(self, m, q, p):
+        self.m = m
+        self.q = q
+        self.p = p
+        self.phi_m = self.get_cyclotomic()
 
-phi_m = get_cyclotomic(m)
+    def generate_key(self):
+        self.secret_key = Polynomial([random.randrange(0, self.q) for i in range(0, self.m//2)])
+
+    def get_cyclotomic(self):
+        phi_m = [0]*(self.m//2 + 1)
+        phi_m[0] = 1
+        phi_m[-1]=1
+        return Polynomial(phi_m)
+
+    def encrypt(self, plaintext):
+        c1 = Polynomial([random.randrange(0, self.q) for i in range(0, self.m // 2)])
+        major_noise = self.get_noise(c1)
+        minor_noise = Polynomial([random.randrange(0, self.minor_range) for i in range(0, self.m // 2)])
+        c0 = self.modulo(plaintext - major_noise + self.p*minor_noise, self.q)
+        return Ciphertext(c0, c1)
+
+    def get_noise(self, val):
+        multi_modulo_phim = np.polydiv((self.secret_key * val).coef, self.phi_m.coef)[1]
+        multi_modulo_phim_modulo_q = self.modulo(Polynomial(multi_modulo_phim), self.q)
+        return multi_modulo_phim_modulo_q
+
+    def decrypt(self, ciphertext):
+        noise = self.get_noise(ciphertext.c1)
+        return self.modulo(self.modulo(ciphertext.c0 + noise, self.q), self.p)
+
+    def modulo(self, poly, mod):
+        return Polynomial([x % mod for x in poly.coef])
 
 
 class Ciphertext:
-    plaintext = []
-    c0 = []
-    c1 = []
 
-    def __init__(self, plaintext):
-        self.plaintext = plaintext
-        self.c1 = Polynomial([random.randrange(0, q) for i in range(0, m//2)])
-        major_noise = self.get_noise(self.c1)
-        minor_noise = Polynomial([random.randrange(0, 5) for i in range(0, m//2)])
-        self.c0 = self.mod_q(plaintext - major_noise + minor_noise)
-
-    def get_noise(self, val):
-        multi_modulo_phim = np.polydiv((secret_key * val).coef, phi_m.coef)[1]
-        multi_modulo_phim_modulo_q = self.mod_q(Polynomial(multi_modulo_phim))
-        return multi_modulo_phim_modulo_q
-
-    def mod_q(self, poly):
-        return Polynomial([x % q for x in poly.coef])
-
-    def noise_level(self):
-        diff = [c_i - p_i for p_i, c_i in zip(self.plaintext, self.ciphertext)]
-        return max(diff)
-
-    def decrypt(self):
-        noise = self.get_noise(self.c1)
-        return self.c0 + noise
-
-def encrypt(plaintext):
-    return Ciphertext(plaintext)
-
-
-def decrypt(ciphertext):
-    return ciphertext.decrypt()
+    def __init__(self, c0, c1):
+        self.c0 = c0
+        self.c1 = c1
 
 
