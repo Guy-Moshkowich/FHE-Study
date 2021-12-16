@@ -1,6 +1,5 @@
 import unittest
 from bgv import BGV
-
 from numpy.polynomial import Polynomial
 
 
