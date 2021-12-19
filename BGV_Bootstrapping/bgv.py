@@ -41,7 +41,9 @@ class BGV:
         return Polynomial([x % mod for x in poly.coef])
 
     def add(self, ctx1, ctx2):
-        return Ciphertext(ctx1.c0 + ctx2.c0, ctx1.c1 + ctx2.c1)
+        ctx3_0 = self.modulo(ctx1.c0 + ctx2.c0, self.q)
+        ctx3_1 = self.modulo(ctx1.c1 + ctx2.c1, self.q)
+        return Ciphertext(ctx3_0, ctx3_1)
 
 
 class Ciphertext:

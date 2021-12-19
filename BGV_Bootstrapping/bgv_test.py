@@ -19,7 +19,6 @@ class TestBgv(unittest.TestCase):
         print(plaintext_decrypted)
         self.assertTrue(plaintext_decrypted == plaintext)
 
-
     def test_add(self):
         plaintext1 = Polynomial([1, 0, 1, 0, 1, 0, 1, 0])
         plaintext2 = Polynomial([0, 1, 0, 1, 0, 1, 0, 1])
