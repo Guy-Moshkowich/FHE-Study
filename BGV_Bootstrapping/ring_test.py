@@ -17,7 +17,7 @@ class TestRingElement(unittest.TestCase):
     def test_modulo_phi(self):
         poly = Polynomial([1, 2, 3])
         r1 = RingElement(poly, self.m, self.q)
-        r2 = RingElement(poly + 5* r1.get_cyclotomic(self.m), self.m, self.q)
+        r2 = RingElement(poly + 5 * r1.get_cyclotomic(), self.m, self.q)
         self.assertTrue(r1 == r2)
 
     def test_add(self):

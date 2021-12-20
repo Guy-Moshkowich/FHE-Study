@@ -6,14 +6,13 @@ import numpy as np
 class RingElement:
 
     def __init__(self, poly, m, mod):
-        self.phi_m = self.get_cyclotomic(m)
         self.mod = mod
         self.m = m
+        self.phi_m = self.get_cyclotomic()
         self.poly = self.modulo(poly, mod)
 
-
-    def get_cyclotomic(self, m):
-        phi_m = [0]*(m//2 + 1)
+    def get_cyclotomic(self):
+        phi_m = [0]*(self.m//2 + 1)
         phi_m[0] = 1
         phi_m[-1]=1
         return Polynomial(phi_m)
