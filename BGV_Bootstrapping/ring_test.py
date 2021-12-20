@@ -1,5 +1,5 @@
 import unittest
-from bgv import RingElement
+from ring_element import RingElement
 from numpy.polynomial import Polynomial
 
 
