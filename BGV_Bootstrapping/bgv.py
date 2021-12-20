@@ -1,14 +1,14 @@
 import random
 from numpy.polynomial import Polynomial
 import numpy as np
-
 random.seed(0)
+
 
 class BGV:
     minor_range = 5
 
     def __init__(self, m_power, q, p, N):
-        self.m = 2**m_power
+        self.m = 2**m_power # Phi_m(X)=x^m+1
         self.q = q
         self.p = p
         self.N = N
@@ -22,8 +22,7 @@ class BGV:
         for i in range(self.N):
             b = self.get_random_poly(self.q)
             e = self.get_random_poly(self.minor_range)
-            # A.append([self.modulo(b*self.secret_key[1]+2*e, self.q), -b])
-            A.append([self.modulo(b * self.secret_key[1], self.q), -b])
+            A.append([self.modulo(b*self.secret_key[1]+2*e, self.q), -b])
         return A
 
     def get_cyclotomic(self):
@@ -48,11 +47,7 @@ class BGV:
             sum += vi*vj
         return sum
 
-
     def get_major_noise(self, val):
-        # multi_modulo_phim = np.polydiv((self.secret_key[1] * val).coef, self.phi_m.coef)[1]
-        # multi_modulo_phim_modulo_q = self.modulo(Polynomial(multi_modulo_phim), self.q)
-        # return multi_modulo_phim_modulo_q
         return self.modulo(self.secret_key[1] * val, self.q)
 
     def decrypt(self, ciphertext):
@@ -77,7 +72,6 @@ class Ciphertext:
 
     def __add__(self, other):
         return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)
-
 
     def __str__(self):
         return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)
