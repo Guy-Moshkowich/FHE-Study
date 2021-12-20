@@ -2,18 +2,29 @@ import random
 from numpy.polynomial import Polynomial
 import numpy as np
 
+random.seed(0)
 
 class BGV:
     minor_range = 5
 
-    def __init__(self, m, q, p):
-        self.m = m
+    def __init__(self, m_power, q, p, N):
+        self.m = 2**m_power
         self.q = q
         self.p = p
+        self.N = N
         self.phi_m = self.get_cyclotomic()
+        t = self.get_random_poly(self.q)
+        self.secret_key = (1, t)
+        self.pk_A = self.generate_public_key()
 
-    def generate_key(self):
-        self.secret_key = Polynomial([random.randrange(0, self.q) for i in range(0, self.m//2)])
+    def generate_public_key(self):
+        A = []
+        for i in range(self.N):
+            b = self.get_random_poly(self.q)
+            e = self.get_random_poly(self.minor_range)
+            # A.append([self.modulo(b*self.secret_key[1]+2*e, self.q), -b])
+            A.append([self.modulo(b * self.secret_key[1], self.q), -b])
+        return A
 
     def get_cyclotomic(self):
         phi_m = [0]*(self.m//2 + 1)
@@ -22,23 +33,35 @@ class BGV:
         return Polynomial(phi_m)
 
     def encrypt(self, plaintext):
-        c1 = Polynomial([random.randrange(0, self.q) for i in range(0, self.m // 2)])
-        major_noise = self.get_noise(c1)
+        c1 = self.get_random_poly(self.q)
+        major_noise = self.get_major_noise(c1)
         minor_noise = Polynomial([random.randrange(0, self.minor_range) for i in range(0, self.m // 2)])
         c0 = self.modulo(plaintext - major_noise + self.p*minor_noise, self.q)
         return Ciphertext(c0, c1)
 
-    def get_noise(self, val):
-        multi_modulo_phim = np.polydiv((self.secret_key * val).coef, self.phi_m.coef)[1]
-        multi_modulo_phim_modulo_q = self.modulo(Polynomial(multi_modulo_phim), self.q)
-        return multi_modulo_phim_modulo_q
+    def get_random_poly(self, coeff_range):
+        return Polynomial([random.randrange(0, coeff_range) for i in range(0, self.m // 2)])
+
+    def dot_prod(self, v1, v2):
+        sum = 0
+        for vi,vj in zip(v1, v2):
+            sum += vi*vj
+        return sum
+
+
+    def get_major_noise(self, val):
+        # multi_modulo_phim = np.polydiv((self.secret_key[1] * val).coef, self.phi_m.coef)[1]
+        # multi_modulo_phim_modulo_q = self.modulo(Polynomial(multi_modulo_phim), self.q)
+        # return multi_modulo_phim_modulo_q
+        return self.modulo(self.secret_key[1] * val, self.q)
 
     def decrypt(self, ciphertext):
-        noise = self.get_noise(ciphertext.c1)
+        noise = self.get_major_noise(ciphertext.c1)
         return self.modulo(self.modulo(ciphertext.c0 + noise, self.q), self.p)
 
     def modulo(self, poly, mod):
-        return Polynomial([x % mod for x in poly.coef])
+        poly_modulo_phim = np.flip(np.polydiv(np.flip(poly.coef), np.flip(self.phi_m.coef))[1])
+        return Polynomial([x % mod for x in poly_modulo_phim])
 
     def add(self, ctx1, ctx2):
         ctx3_0 = self.modulo(ctx1.c0 + ctx2.c0, self.q)
