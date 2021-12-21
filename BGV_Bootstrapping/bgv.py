@@ -1,7 +1,7 @@
 import random
 from numpy.polynomial import Polynomial
-random.seed(0)
 from ring_element import RingElement
+import numpy as np
 
 
 class BGV:
@@ -16,23 +16,21 @@ class BGV:
         self.int_0 = RingElement(Polynomial(0), self.m, self.q)
         t = RingElement.random(m=self.m, mod=self.q)
         self.secret_key = (1, t)
-        self.pk_A = self.generate_public_key()
+        self.pk = self.generate_public_key()
 
     def generate_public_key(self):
         A = []
         for i in range(self.N):
             b = RingElement.random(self.m, self.q)
             e = RingElement.random(self.m, self.q, max_range=self.epsilon)
-            A.append([b*self.secret_key[1]+self.int_2*e, self.int_0-b])
-        return A
+            A.append(np.array([b*self.secret_key[1]+self.int_2*e, self.int_0 - b]))
+        return np.array(A)
 
     def encrypt(self, plaintext_2: RingElement):
         plaintext_q = plaintext_2.change_modulo(self.q)
-        c1 = RingElement.random(self.m, self.q)
-        major_noise = self.secret_key[1] * c1
-        minor_noise = RingElement.random(self.m, self.q, self.epsilon)
-        c0 = plaintext_q - major_noise + self.int_2 * minor_noise
-        return Ciphertext(c0, c1)
+        r = np.array([RingElement.random(self.m, self.q) for i in range(self.N)])
+        ctx = np.matmul(self.pk.transpose(), r) + [plaintext_q, self.int_0]
+        return Ciphertext(ctx[0], ctx[1])
 
     def decrypt(self, ciphertext):
         noise = self.secret_key[1] * ciphertext.c1

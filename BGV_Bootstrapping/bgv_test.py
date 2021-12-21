@@ -35,7 +35,7 @@ class TestBgv(unittest.TestCase):
     def test_pk(self):
         result = []
         for i in range(self.bgv.N):
-            ring_element_q = self.bgv.pk_A[i][0] + self.bgv.secret_key[1]*self.bgv.pk_A[i][1]
+            ring_element_q = self.bgv.pk[i][0] + self.bgv.secret_key[1]*self.bgv.pk[i][1]
             ring_element_2 = ring_element_q.change_modulo(2)
             result.append(ring_element_2)
             self.assertEqual(RingElement(Polynomial(0),self.bgv.m, 2), ring_element_2)
