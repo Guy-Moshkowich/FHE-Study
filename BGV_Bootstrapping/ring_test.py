@@ -26,6 +26,12 @@ class TestRingElement(unittest.TestCase):
         expected = RingElement(Polynomial([3, 5]), self.m, self.q)
         self.assertTrue(expected == r1 + r2)
 
+    def test_sub(self):
+        r1 = RingElement(Polynomial([2, 3]), self.m, self.q)
+        r2 = RingElement(Polynomial([1, 2]), self.m, self.q)
+        expected = RingElement(Polynomial([1, 1]), self.m, self.q)
+        self.assertTrue(expected == r1 - r2)
+
     def test_multi(self):
         # (2+3x)(1+2x)=2 + 7x + 6x^2
         # (6 + 7x) + (x^2 + 1)6
@@ -34,3 +40,8 @@ class TestRingElement(unittest.TestCase):
         expected = RingElement(Polynomial([6, 7]), self.m, self.q)
         self.assertTrue(expected == r1 * r2)
 
+    def test_change_modulo(self):
+        r1 = RingElement(Polynomial([2, 3]), self.m, self.q)
+        result = r1.change_modulo(2)
+        expected = RingElement(Polynomial([0, 1]), self.m, 2)
+        self.assertEqual(expected, result)
