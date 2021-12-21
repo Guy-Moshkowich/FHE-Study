@@ -29,23 +29,14 @@ class BGV:
     def encrypt(self, plaintext_2: RingElement):
         plaintext_q = plaintext_2.change_modulo(self.q)
         c1 = RingElement.random(self.m, self.q)
-        major_noise = self.get_major_noise(c1)
+        major_noise = self.secret_key[1] * c1
         minor_noise = RingElement.random(self.m, self.q, self.epsilon)
         c0 = plaintext_q - major_noise + self.int_2 * minor_noise
         return Ciphertext(c0, c1)
 
-    def get_major_noise(self, val):
-        return self.secret_key[1] * val
-
     def decrypt(self, ciphertext):
-        noise = self.get_major_noise(ciphertext.c1)
+        noise = self.secret_key[1] * ciphertext.c1
         return (ciphertext.c0 + noise).change_modulo(2)
-
-    def add(self, ctx1, ctx2):
-        ctx3_0 = self.modulo(ctx1.c0 + ctx2.c0, self.q)
-        ctx3_1 = self.modulo(ctx1.c1 + ctx2.c1, self.q)
-        return Ciphertext(ctx3_0, ctx3_1)
-
 
 
 class Ciphertext:
@@ -56,6 +47,9 @@ class Ciphertext:
 
     def __add__(self, other):
         return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)
+
+    def __sub__(self, other):
+        return Ciphertext(self.c0 - other.c0, self.c1 - other.c1)
 
     def __str__(self):
         return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)

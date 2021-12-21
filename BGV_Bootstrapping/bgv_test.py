@@ -23,7 +23,14 @@ class TestBgv(unittest.TestCase):
         result = self.bgv.decrypt(ctx1 + ctx2)
         self.assertEqual(expected, result)
 
-
+    def test_sub(self):
+        plaintext1 = RingElement(Polynomial([1, 1, 1, 1, 0, 0, 0, 0]), self.bgv.m, 2)
+        plaintext2 = RingElement(Polynomial([1, 1, 1, 1, 0, 0, 0, 0]), self.bgv.m, 2)
+        expected = RingElement(Polynomial([0]), self.bgv.m, 2)
+        ctx1 = self.bgv.encrypt(plaintext1)
+        ctx2 = self.bgv.encrypt(plaintext2)
+        result = self.bgv.decrypt(ctx1 - ctx2)
+        self.assertEqual(expected, result)
 
     def test_pk(self):
         result = []
