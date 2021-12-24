@@ -21,7 +21,11 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_bit_decomp(self):
-        result = bit_decomp(Polynomial([3,4,5]), 3) #3+4x+5x^2
-        e = np.array([[1,1,0], [0,0,1],[1,0,1]]).transpose()
-        expected = [Polynomial(x) for x in e]
-        self.assertEqual(expected, result)
+        orig_poly = Polynomial([3,4,5])
+        result = bit_decomp(orig_poly, 3) #3+4x+5x^2
+        reconstruct = Polynomial([0])
+        for i in range(len(result)):
+            for a in result[i].coef:
+                self.assertTrue(a == 1 or a == 0)
+            reconstruct += 2**i * result[i]
+        self.assertEqual(reconstruct, orig_poly)
