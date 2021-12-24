@@ -49,6 +49,12 @@ class Ciphertext:
     def __sub__(self, other):
         return Ciphertext(self.c0 - other.c0, self.c1 - other.c1)
 
+    def __mul__(self, other):
+        # (c0+s*c1)*(d0+s*d1) = c0d0+s*(c1*d0+c0d1)+s^2*c1d1 =
+        # = (c0d0,c1*d0+c0d1,c1d1)*(1,s,s^2)
+        mult = []
+        return
+
     def __str__(self):
         return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)
 
