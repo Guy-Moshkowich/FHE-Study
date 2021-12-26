@@ -10,14 +10,12 @@ def dot_prod(v1, v2):
 
 
 def bit_decomp(poly_list, size: int):
-    # result = []
     bit_decomp_poly_list = []
     for poly in poly_list:
         bit_decomp_poly_list.append(bit_decomp_poly(poly, size))
-    # for i in range(len(poly_list)):
-    #     tmp2 = [bit_decomp_poly[i] for bit_decomp_poly in bit_decomp_poly_list]
-    #     result.append(tmp2)
-    return np.array(bit_decomp_poly_list).transpose()
+    list_of_poly_list = np.array(bit_decomp_poly_list).transpose()
+    flat_list = [item for sublist in list_of_poly_list for item in sublist]
+    return flat_list
 
 
 def bit_decomp_poly(poly: Polynomial, size: int):
@@ -35,4 +33,11 @@ def bit_decomp_int(z: int, size: int):
         lsb = z % 2
         result.append(lsb)
         z = (z - lsb)//2
+    return result
+
+
+def powers_of_2(poly_list, size: int):
+    result = []
+    for i in range(size):
+        result.extend([2** i * x for x in poly_list])
     return result

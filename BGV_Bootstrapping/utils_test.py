@@ -42,12 +42,17 @@ class TestUtils(unittest.TestCase):
 
     def test_bit_decomp(self):
         size = 8
-        orig_poly_list = [Polynomial([3,4,5]), Polynomial([3,4,5])]
+        orig_poly_list = [Polynomial([3,4,5]), Polynomial([1,2,3])]
         result = bit_decomp(orig_poly_list, size)
-        result_transpose = np.array(result).transpose()
-        for k in range(len(result_transpose)):
-            result_k = result_transpose[k]
+        for j in range(len(orig_poly_list)):
             reconstruct = Polynomial([0])
-            for i in range(len(result_k)):
-                reconstruct += 2**i * result_k[i]
-            self.assertEqual(reconstruct, orig_poly_list[k])
+            for l in range(size):
+                reconstruct += 2**l * result[j + len(orig_poly_list)*l]
+            self.assertEqual(reconstruct, orig_poly_list[j])
+
+    def test_powers_of_2(self):
+        size = 2
+        orig_poly_list = [Polynomial([1, 2, 3]), Polynomial([4, 5, 6])]
+        result = powers_of_2(orig_poly_list, size)
+        expected = [Polynomial([1, 2, 3]), Polynomial([4, 5, 6]), Polynomial([2, 4, 6]), Polynomial([8, 10, 12])]
+        self.assertEqual(expected, result)
