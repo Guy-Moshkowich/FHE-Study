@@ -56,3 +56,13 @@ class TestUtils(unittest.TestCase):
         result = powers_of_2(orig_poly_list, size)
         expected = [Polynomial([1, 2, 3]), Polynomial([4, 5, 6]), Polynomial([2, 4, 6]), Polynomial([8, 10, 12])]
         self.assertEqual(expected, result)
+
+    def test_bit_comp_with_powers_of_2(self):
+        size = 8
+        a = [Polynomial([1, 2, 3]), Polynomial([1,1,1])]
+        b = [Polynomial([4, 5, 6]), Polynomial([2,2,2])]
+        result_bit_decomp = bit_decomp(a, size)
+        result_powers_of_2 = powers_of_2(b, size)
+        result = np.dot(result_bit_decomp, result_powers_of_2)
+        expected = np.dot(a, b)
+        self.assertEqual(expected, result)
