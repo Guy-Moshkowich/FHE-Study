@@ -16,16 +16,38 @@ class TestUtils(unittest.TestCase):
         self.assertEqual([0, 1, 1, 0, 0], bit_decomp_int(z=6, size=5))
 
     def test_bit_decomp_deg_0(self):
-        result = bit_decomp(Polynomial([6]), 3)
+        result = bit_decomp_poly(Polynomial([6]), 3)
         expected = [Polynomial([0]), Polynomial([1]), Polynomial([1])]
         self.assertEqual(expected, result)
 
-    def test_bit_decomp(self):
+    def test_bit_decomp_poly(self):
         orig_poly = Polynomial([3,4,5])
-        result = bit_decomp(orig_poly, 3) #3+4x+5x^2
+        result = bit_decomp_poly(orig_poly, 3) #3+4x+5x^2
+        # print('result: ', result)
         reconstruct = Polynomial([0])
         for i in range(len(result)):
             for a in result[i].coef:
                 self.assertTrue(a == 1 or a == 0)
             reconstruct += 2**i * result[i]
         self.assertEqual(reconstruct, orig_poly)
+
+
+    def test_bit_decomp_poly_large_size(self):
+        orig_poly = Polynomial([3,4,5])
+        result = bit_decomp_poly(orig_poly, 10) #3+4x+5x^2
+        reconstruct = Polynomial([0])
+        for i in range(len(result)):
+            reconstruct += 2**i * result[i]
+        self.assertEqual(reconstruct, orig_poly)
+
+    def test_bit_decomp(self):
+        size = 8
+        orig_poly_list = [Polynomial([3,4,5]), Polynomial([3,4,5])]
+        result = bit_decomp(orig_poly_list, size)
+        result_transpose = np.array(result).transpose()
+        for k in range(len(result_transpose)):
+            result_k = result_transpose[k]
+            reconstruct = Polynomial([0])
+            for i in range(len(result_k)):
+                reconstruct += 2**i * result_k[i]
+            self.assertEqual(reconstruct, orig_poly_list[k])

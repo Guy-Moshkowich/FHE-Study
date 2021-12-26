@@ -9,7 +9,18 @@ def dot_prod(v1, v2):
     return sum
 
 
-def bit_decomp(poly: Polynomial, size: int):
+def bit_decomp(poly_list, size: int):
+    # result = []
+    bit_decomp_poly_list = []
+    for poly in poly_list:
+        bit_decomp_poly_list.append(bit_decomp_poly(poly, size))
+    # for i in range(len(poly_list)):
+    #     tmp2 = [bit_decomp_poly[i] for bit_decomp_poly in bit_decomp_poly_list]
+    #     result.append(tmp2)
+    return np.array(bit_decomp_poly_list).transpose()
+
+
+def bit_decomp_poly(poly: Polynomial, size: int):
     result = []
     for c in poly.coef:
         result.append(bit_decomp_int(c, size))
