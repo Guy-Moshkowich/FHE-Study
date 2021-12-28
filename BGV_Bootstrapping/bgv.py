@@ -2,6 +2,8 @@ import random
 from numpy.polynomial import Polynomial
 from ring_element import RingElement
 import numpy as np
+from utils import *
+import math
 
 
 class BGV:
@@ -13,47 +15,69 @@ class BGV:
         self.p = p
         self.N = N
         self.int_2 = RingElement(Polynomial(2), self.m, self.q)
+        self.int_1 = RingElement(Polynomial(1), self.m, self.q)
         self.int_0 = RingElement(Polynomial(0), self.m, self.q)
         t = RingElement.random(m=self.m, mod=self.q)
-        self.secret_key = (1, t)
-        self.pk = self.generate_public_key()
+        self.secret_key = (self.int_1, t)
+        self.public_key = self.generate_public_key(N)
+        self.linearization_bit_size = int(math.log2(self.q)) + 1
+        self.linearization_matrix = self.linearization_matrix()
 
-    def generate_public_key(self):
+
+    def linearization_matrix(self):
+        t = self.secret_key[1].poly
+        s1 = [Polynomial(1), t, t*t] #secret key tensor
+        B = self.generate_public_key(len(s1) * self.linearization_bit_size)
+        s1_decomp_poly = bit_decomp(s1, self.linearization_bit_size)
+        s1_decomp = [RingElement(p, self.m, self.q) for p in s1_decomp_poly]
+        A = np.array([B[0] + s1_decomp, B[1]]).transpose()
+        return A
+
+    def generate_public_key(self, size):
         A = []
-        for i in range(self.N):
+        for i in range(size):
             b = RingElement.random(self.m, self.q)
             e = RingElement.random(self.m, self.q, max_range=self.epsilon)
             A.append(np.array([b*self.secret_key[1]+self.int_2*e, self.int_0 - b]))
-        return np.array(A)
+        return np.array(A).transpose()
 
-    def encrypt(self, plaintext_2: RingElement):
-        plaintext_q = plaintext_2.change_modulo(self.q)
+    def encrypt(self, plaintext: RingElement):
+        plaintext_q = plaintext.change_modulo(self.q)
         r = np.array([RingElement.random(self.m, self.q) for i in range(self.N)])
-        ctx = np.matmul(self.pk.transpose(), r) + [plaintext_q, self.int_0]
-        return Ciphertext(ctx[0], ctx[1])
+        ctx = np.matmul(self.public_key, r) + [plaintext_q, self.int_0]
+        return Ciphertext(ctx[0], ctx[1], self)
 
-    def decrypt(self, ciphertext):
-        noise = self.secret_key[1] * ciphertext.c1
+    def decrypt(self, ciphertext, secret_key):
+        noise = secret_key[1] * ciphertext.c1
         return (ciphertext.c0 + noise).change_modulo(2)
 
 
 class Ciphertext:
 
-    def __init__(self, c0, c1):
+    def __init__(self, c0: RingElement, c1: RingElement, bgv: BGV):
         self.c0 = c0
         self.c1 = c1
+        self.bgv = bgv
 
     def __add__(self, other):
-        return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)
+        return Ciphertext(self.c0 + other.c0, self.c1 + other.c1, self.bgv)
 
     def __sub__(self, other):
-        return Ciphertext(self.c0 - other.c0, self.c1 - other.c1)
+        return Ciphertext(self.c0 - other.c0, self.c1 - other.c1, self.bgv)
 
     def __mul__(self, other):
-        # (c0+s*c1)*(d0+s*d1) = c0d0+s*(c1*d0+c0d1)+s^2*c1d1 =
-        # = (c0d0,c1*d0+c0d1,c1d1)*(1,s,s^2)
-        mult = []
-        return
+        ctx_bit_decomp_poly = bit_decomp([self.c0.poly*other.c0.poly,
+                        self.c0.poly*other.c1.poly + self.c1.poly*other.c0.poly,
+                        self.c1.poly * other.c1.poly],
+                       size=self.bgv.linearization_bit_size)
+        # new_ciphertext = np.array(shape=(2,2), dtype=RingElement)
+        # for p in ctx_bit_decomp_poly:
+
+        ctx_bit_decomp = np.array([[RingElement(p, self.bgv.m, self.bgv.q)] for p in ctx_bit_decomp_poly])
+
+        new_ciphertext = np.matmul(ctx_bit_decomp.transpose(), self.bgv.linearization_matrix)
+
+        return Ciphertext(new_ciphertext[0][0], new_ciphertext[0][1], self.bgv)
 
     def __str__(self):
         return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)
