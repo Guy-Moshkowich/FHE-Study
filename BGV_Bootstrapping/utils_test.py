@@ -69,23 +69,23 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(expected, result)
 
 
-    def test_bit_comp_with_powers_of_2_different_dimensions(self):
-        bgv = BGV(m_power=4, q=256, p=2, N=10)
-        size = 8
-        t = Polynomial([1, 2, 3])
-        sk_before = [1, t*t, t**2]
-        sk_after = [1, t]
-
-        plaintext1 = RingElement(Polynomial([1, 1]), bgv.m, 2)
-        ctx1 = bgv.encrypt(plaintext1)
-        ctx1_as_poly = [ctx1.c0.poly, ctx1.c1.poly]
-        plaintext2 = RingElement(Polynomial([1, 0]), bgv.m, 2)
-        ctx2 = bgv.encrypt(plaintext1)
-        ctx2_as_poly = [ctx2.c0.poly, ctx2.c1.poly]
-        ctx_multi = [ctx1_as_poly[0] * ctx2_as_poly[0],
-                     ctx1_as_poly[0] * ctx2_as_poly[1] + ctx1_as_poly[1]*ctx2_as_poly[0],
-                     ctx1_as_poly[1] * ctx2_as_poly[1]]
-        ctx_multi_linearized = bit_decomp(ctx_multi, size=bgv.linearization_bit_size)
+    # def test_bit_comp_with_powers_of_2_different_dimensions(self):
+    #     bgv = BGV(m_power=4, q=256, p=2, N=10)
+    #     size = 8
+    #     t = Polynomial([1, 2, 3])
+    #     sk_before = [1, t*t, t**2]
+    #     sk_after = [1, t]
+    #
+    #     plaintext1 = RingElement(Polynomial([1, 1]), bgv.m, 2)
+    #     ctx1 = bgv.encrypt(plaintext1)
+    #     ctx1_as_poly = [ctx1.c0.poly, ctx1.c1.poly]
+    #     plaintext2 = RingElement(Polynomial([1, 0]), bgv.m, 2)
+    #     ctx2 = bgv.encrypt(plaintext1)
+    #     ctx2_as_poly = [ctx2.c0.poly, ctx2.c1.poly]
+    #     ctx_multi = [ctx1_as_poly[0] * ctx2_as_poly[0],
+    #                  ctx1_as_poly[0] * ctx2_as_poly[1] + ctx1_as_poly[1]*ctx2_as_poly[0],
+    #                  ctx1_as_poly[1] * ctx2_as_poly[1]]
+    #     ctx_multi_linearized = bit_decomp(ctx_multi, size=bgv.linearization_bit_size)
         # ctx_after =
         # b = [Polynomial([4, 5, 6]), Polynomial([8,8,8])]
         # result_bit_decomp = bit_decomp(a, size)
