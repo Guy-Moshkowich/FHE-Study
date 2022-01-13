@@ -19,6 +19,7 @@ class BGV:
         self.public_key = self.generate_public_key(N)
         self.linearization_bit_size = int(math.log2(self.q)) + 1
         self.linearization_matrix = self.linearization_matrix()
+        self.modulo_chain = [17,13,11]
 
     def linearization_matrix(self):
         t = self.secret_key[1].poly
@@ -54,6 +55,7 @@ class Ciphertext:
         self.c0 = c0
         self.c1 = c1
         self.bgv = bgv
+        self.modulo_chain_index = 0
 
     def __add__(self, other):
         return Ciphertext(self.c0 + other.c0, self.c1 + other.c1, self.bgv)
@@ -73,5 +75,15 @@ class Ciphertext:
 
     def __str__(self):
         return 'c0: ' + str(self.c0) + ', c1: ' + str(self.c1)
+
+    def scale(self):
+        next_modulo_chain_index = self.modulo_chain_index + 1
+        assert next_modulo_chain_index < len(self.bgv.modulo_chain)
+        q_next = self.bgv.modulo_chain[next_modulo_chain_index]
+        q_current = self.bgv.modulo_chain[self.modulo_chain_index]
+        self.bgv.scale([self.c0, self.c1], q_next,q_current)
+        self.modulo_chain_index = next_modulo_chain_index
+
+
 
 
