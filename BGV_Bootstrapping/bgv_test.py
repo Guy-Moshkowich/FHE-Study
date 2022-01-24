@@ -69,3 +69,11 @@ class TestBgv(unittest.TestCase):
         result_ctx = ctx1 * ctx2
         result = self.bgv.decrypt(result_ctx, self.bgv.secret_key)
         self.assertEqual(expected, result)
+
+    def test_multi_long_power(self):
+        plaintext = RingElement(Polynomial([1, 1, 0]), self.bgv.m, 2)  # 1 + x
+        expected = RingElement(Polynomial([1, 0, 1]), self.bgv.m, 2)  # (1+x)(1+x) = (1 + 2x +x^2)=1+x^2 mod 2
+        ctx = self.bgv.encrypt(plaintext)
+        result_ctx = ctx * ctx
+        result = self.bgv.decrypt(result_ctx, self.bgv.secret_key)
+        self.assertEqual(expected, result)

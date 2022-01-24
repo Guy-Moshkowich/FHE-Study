@@ -4,17 +4,17 @@ import math
 
 
 class BGV:
-    epsilon = 5
 
-    def __init__(self, m_power, q, p, N):
+    def __init__(self, m_power, q, p, N, max_added_noise = 5):
         self.m = 2**m_power # Phi_m(X)=x^m+1
         self.q = q
         self.p = p
         self.N = N
+        self.max_added_noise = max_added_noise
         self.int_2 = RingElement(Polynomial(2), self.m, self.q)
         self.int_1 = RingElement(Polynomial(1), self.m, self.q)
         self.int_0 = RingElement(Polynomial(0), self.m, self.q)
-        t = RingElement.random(m=self.m, mod=self.q)
+        t = RingElement.random(m=self.m, mod=self.q, max_range=self.max_added_noise)
         self.secret_key = (self.int_1, t)
         self.public_key = self.generate_public_key(N)
         self.linearization_bit_size = int(math.log2(self.q)) + 1
@@ -34,10 +34,11 @@ class BGV:
         A = []
         for i in range(size):
             b = RingElement.random(self.m, self.q)
-            e = RingElement.random(self.m, self.q, max_range=self.epsilon)
+            e = RingElement.random(self.m, self.q, max_range=self.max_added_noise)
             A.append(np.array([b*self.secret_key[1]+self.int_2*e, self.int_0 - b]))
         return np.array(A).transpose()
 
+#TODO: move encrypt/decrypt to ciphertext class
     def encrypt(self, plaintext: RingElement):
         plaintext_q = plaintext.change_modulo(self.q)
         r = np.array([RingElement.random(self.m, self.q) for i in range(self.N)])
@@ -48,6 +49,7 @@ class BGV:
         noise = secret_key[1] * ciphertext.c1
         return (ciphertext.c0 + noise).change_modulo(2)
 
+from numpy import linalg as LA
 
 class Ciphertext:
 
@@ -84,6 +86,12 @@ class Ciphertext:
         self.bgv.scale([self.c0, self.c1], q_next,q_current)
         self.modulo_chain_index = next_modulo_chain_index
 
-
+#TODO: move to BGV class as it uses secret_key
+    def get_noise(self):
+        plaintext = self.bgv.decrypt(self, self.bgv.secret_key)
+        plaintext_with_noise = self.c0 + self.bgv.secret_key[1] * self.c1
+        return (plaintext_with_noise.poly - plaintext.poly).coef
+        # return max([x for x in noise.coef])
+        # return LA.norm(noise.poly.convert().coef, ord=1)
 
 
