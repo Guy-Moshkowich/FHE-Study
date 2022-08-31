@@ -1,4 +1,4 @@
-from ring_element import RingElement
+from RLWE.ring_element import RingElement
 from numpy.polynomial import Polynomial
 from bgv import BGV
 

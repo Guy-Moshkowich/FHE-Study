@@ -1,7 +1,7 @@
 import unittest
 from bgv import BGV
 from numpy.polynomial import Polynomial
-from ring_element import RingElement
+from RLWE.ring_element import RingElement
 
 
 class TestBgv(unittest.TestCase):

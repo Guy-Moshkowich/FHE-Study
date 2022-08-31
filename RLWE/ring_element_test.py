@@ -1,4 +1,7 @@
 import unittest
+import sys
+import os
+sys.path.append(os.path.abspath("../RLWE/"))
 from ring_element import RingElement
 from numpy.polynomial import Polynomial
 

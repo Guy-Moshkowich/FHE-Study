@@ -1,5 +1,5 @@
-from ring_element import RingElement
-from utils import *
+from RLWE.ring_element import RingElement
+from Utils.utils import *
 import math
 
 
@@ -49,7 +49,6 @@ class BGV:
         noise = secret_key[1] * ciphertext.c1
         return (ciphertext.c0 + noise).change_modulo(2)
 
-from numpy import linalg as LA
 
 class Ciphertext:
 
