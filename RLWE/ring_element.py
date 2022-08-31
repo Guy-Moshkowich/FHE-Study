@@ -47,7 +47,7 @@ class RingElement:
     def random(cls, m, mod, max_range=0):
         if max_range == 0:
             max_range = m//2
-        poly =  Polynomial([random.randrange(0, mod) for i in range(0, max_range)])
+        poly = Polynomial([random.randint(0, max_range) for i in range(0, m)])
         return cls(poly, m, mod)
 
     def change_modulo(self, new_modulo):
