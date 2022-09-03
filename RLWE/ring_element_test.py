@@ -48,3 +48,10 @@ class TestRingElement(unittest.TestCase):
         result = r1.change_modulo(2)
         expected = RingElement(Polynomial([0, 1]), self.m, 2)
         self.assertEqual(expected, result)
+
+    def test_compose(self):
+        r = RingElement(Polynomial([15, 123, 7, 99]), 8, 256)
+        x_power_3 = Polynomial([0, 0, 0, 1])
+        result = r.compose(x_power_3)
+        expected = RingElement(Polynomial([15, 99, 249, 123]), 8, 256)
+        self.assertEqual(expected, result)

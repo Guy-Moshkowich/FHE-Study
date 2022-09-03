@@ -5,7 +5,7 @@ import numpy as np
 
 class RingElement:
 
-    def __init__(self, poly, m, mod):
+    def __init__(self, poly: Polynomial, m, mod):
         self.mod = mod
         self.m = m
         self.phi_m = self.get_cyclotomic()
@@ -57,3 +57,8 @@ class RingElement:
         poly_modulo_phim = np.flip(np.polydiv(np.flip(poly.coef), np.flip(self.phi_m.coef))[1])
         poly_modulo_phim_q =  Polynomial([x % mod for x in poly_modulo_phim])
         return poly_modulo_phim_q
+
+    def compose(self, g: Polynomial):  # compute composition of self.poly and g mod (X^{m//2}+1, mod)
+        g_poly1d = np.poly1d(g.coef[::-1])
+        compose_poly1d = np.poly1d(self.poly.coef[::-1])(g_poly1d)
+        return RingElement(Polynomial(compose_poly1d.coefficients[::-1]), self.m, self.mod)

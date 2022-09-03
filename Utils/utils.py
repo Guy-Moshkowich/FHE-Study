@@ -41,3 +41,5 @@ def powers_of_2(poly_list, size: int):
     for i in range(size):
         result.extend([2** i * x for x in poly_list])
     return result
+
+

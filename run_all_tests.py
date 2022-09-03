@@ -4,11 +4,13 @@ import os
 sys.path.append(os.path.abspath("RLWE/"))
 sys.path.append(os.path.abspath("Utils/"))
 sys.path.append(os.path.abspath("BGV/"))
+sys.path.append(os.path.abspath("CKKS/"))
 
 testmodules = [
     'ring_element_test',
     'bgv_test',
     'utils_test',
+    'ckks_test'
     ]
 
 
