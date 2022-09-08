@@ -1,7 +1,6 @@
 import unittest
 from utils import *
-from bgv import *
-
+import numpy
 
 class TestUtils(unittest.TestCase):
 
@@ -68,6 +67,12 @@ class TestUtils(unittest.TestCase):
         expected = np.dot(a, b)
         self.assertEqual(expected, result)
 
+    def test_nth_roots_of_unity(self):
+        roots = get_nth_primitive_roots_of_unity(4)
+        numpy.testing.assert_almost_equal(roots[0].real, 0, 0.0001)
+        numpy.testing.assert_almost_equal(roots[0].imag, 1, 0.0001)
+        numpy.testing.assert_almost_equal(roots[1].real , 0, 0.0001)
+        numpy.testing.assert_almost_equal(roots[1].imag, -1, 0.0001)
 
     # def test_bit_comp_with_powers_of_2_different_dimensions(self):
     #     bgv = BGV(m_power=4, q=256, p=2, N=10)

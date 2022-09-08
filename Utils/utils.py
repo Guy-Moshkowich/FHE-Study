@@ -1,6 +1,7 @@
 from numpy.polynomial import Polynomial
 import numpy as np
-
+from cmath import exp, pi
+import math
 
 def dot_prod(v1, v2):
     sum = 0
@@ -42,4 +43,8 @@ def powers_of_2(poly_list, size: int):
         result.extend([2** i * x for x in poly_list])
     return result
 
+
+def get_nth_primitive_roots_of_unity(n):
+    c = 2j * pi / n
+    return [exp(k * c) for k in range(n) if math.gcd(k, n) == 1]
 
