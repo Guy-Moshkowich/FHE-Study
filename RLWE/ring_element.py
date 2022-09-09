@@ -7,12 +7,16 @@ import Utils.utils
 
 
 class RingElement:
+    primitive_roots =[]
 
     def __init__(self, poly: Polynomial, m, mod):
         self.mod = mod
         self.m = m
         self.phi_m = self.get_cyclotomic()
         self.poly = self.modulo(poly, mod)
+        if len(RingElement.primitive_roots) == 0:
+            RingElement.primitive_roots = Utils.utils.get_nth_primitive_roots_of_unity(self.m)
+
 
     def get_cyclotomic(self): #X^{m/2}+1
         phi_m = [0]*(self.m//2 + 1)
@@ -54,6 +58,11 @@ class RingElement:
         return cls(poly, m, mod)
 
     @classmethod
+    def random_binary(cls, m, mod):
+        return RingElement.random(m, mod, max_range=1)
+
+
+    @classmethod
     def small_gauss(cls, m, mod, mu=1, sigma=0.5):
         small_poly = Polynomial([int(random.gauss(mu=1, sigma=0.5)-1) for i in range(0, m//2)])
         return cls(small_poly, m, mod)
@@ -71,24 +80,13 @@ class RingElement:
         compose_poly1d = np.poly1d(self.poly.coef[::-1])(g_poly1d)
         return RingElement(Polynomial(compose_poly1d.coefficients[::-1]), self.m, self.mod)
 
-
     def canonical_norm(self):
-        primitive_roots = Utils.utils.get_nth_primitive_roots_of_unity(self.m)
         evals_abs = []
-        for x in primitive_roots:
+        for x in RingElement.primitive_roots:
             coef_transformed = [self.transform_mod_div_2_center(x) for x in self.poly.coef]
             eval = numpy.polynomial.polynomial.polyval(x, coef_transformed)
             evals_abs.append(abs(eval))
         return max(evals_abs)
-
-    # def get_normed_coef(self):
-    #     normalize_coef = []
-    #     for x in self.poly.coef:
-    #         if x <= self.mod // 2:
-    #             normalize_coef.append(x)
-    #         else:
-    #             normalize_coef.append(abs(self.mod - x))
-    #     return normalize_coef
 
     def transform_mod_div_2_center(self, element):
         if element <= self.mod // 2:
