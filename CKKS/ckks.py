@@ -44,33 +44,11 @@ class CKKS:
     def generate_swk_core(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
         return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
 
-    def switch_key(self, ct, swk,s_prime,s, m):
-        debug=  (ct[0] - ct[1]*s_prime-m).canonical_norm()
-        assert  debug<20, debug # ct=[a_prime*s +s^\prime+e,a_prime]
-        debug =  (swk[0] - swk[1]*s-s_prime).canonical_norm()
-        assert  debug<20, debug # swk=[a*s^\prime+s+e,a]
-
+    def switch_key(self, ct, swk):
         q = ct[0].mod
         n = ct[0].m
         minus_one = RingElement(Polynomial([-1]), n, q)
-        self.assert_equal(ct, s_prime, m, 10)
-        # a*s_prime +m+e - a*(a_prime*s_prime+s+e)=m+e-a*a_prime-a_prime*e
-        a = ct[1]
-        a_prime = swk[1]
-        debug = ((a*s_prime + m -a*(a_prime*s + s_prime))-(m-a*a_prime*s)).canonical_norm()
-        assert debug<10, debug
-
-        debug = ((ct[0] - a * (a_prime * s + s_prime)) - (m - a * a_prime * s)).canonical_norm()
-        assert debug < 10, debug
-
-        ct_wrt_target = [ct[0]-(ct[1]*swk[0]),  minus_one* ct[1]*swk[1]]
-        debug = (ct_wrt_target[0] +a*a_prime*s-m).canonical_norm()
-        assert debug<100, debug
-
-
-        debug = (ct_wrt_target[0] - ct_wrt_target[1]*s - m).canonical_norm()
-        assert debug<100, debug
-        return ct_wrt_target
+        return [ct[0]-(ct[1]*swk[0]),  minus_one* ct[1]*swk[1]]
 
     def assert_equal(self, ctx, sk, plaintext_expected, max_error):
         plaintext_actual = self.decrypt(ctx, sk)

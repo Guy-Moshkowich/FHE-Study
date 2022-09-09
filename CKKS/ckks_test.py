@@ -63,22 +63,10 @@ class TestCkks(unittest.TestCase):
         a = RingElement.random_binary(self.ckks.n, self.ckks.q)
         e = RingElement.small_gauss(self.ckks.n, self.ckks.q)
 
-        print("|s_prime|=", s_prime.canonical_norm())
-        print("|e_prime|=", e_prime.canonical_norm())
-        print("|e|=", e.canonical_norm())
-        print("|a|=", a.canonical_norm())
-        print("|e_prime*a|=",(e_prime*a).canonical_norm())
-        print("|a_prime*a|=",(a_prime*a).canonical_norm())
-
         ct_wrt_s_prime = self.ckks.encrypt_core(plaintext, a, s_prime, e)
         self.assert_equal(ct_wrt_s_prime, s_prime, plaintext, 30)
 
-        ct_wrt_s = self.ckks.switch_key(ct_wrt_s_prime, swk_from_s_prime_to_s,s_prime,s, plaintext)
-        print("|ct_wrt_s_a|=",ct_wrt_s[1].canonical_norm())
-        print("ct_wrt_s[1].poly.coef[0]: ",  ct_wrt_s[1].poly.coef[0])
-        print("(a_prime*a).poly.coef[0]: ", (a_prime*a).poly.coef[0])
-        assert ct_wrt_s[1].poly.coef[0] ==-(a_prime*a).poly.coef[0] % self.ckks.q
-
+        ct_wrt_s = self.ckks.switch_key(ct_wrt_s_prime, swk_from_s_prime_to_s)
         self.assert_equal(ct_wrt_s, s, plaintext, 100)
 
 
