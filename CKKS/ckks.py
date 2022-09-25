@@ -19,14 +19,9 @@ class CKKS:
 
     # ciphertext:= [a * secret_key + plaintext + e, a]
     def encrypt_core(self, plaintext:RingElement, a:RingElement, secret_key:RingElement, e:RingElement):
-        ct0 = (a * secret_key + plaintext + e).change_modulo(self.q)
-        ct1 = a
-        ctx = [ct0, ct1]
-        # assert (self.decrypt(ctx,secret_key)-plaintext).norm_canonical() <= 50, "fail encrypting.error is too big: " + str((self.decrypt(ctx,secret_key)-plaintext).norm_canonical())
-        return ctx
-
-    def decrypt(self, ciphertext, secret_key):
-        return ciphertext[0] - (ciphertext[1]*secret_key).change_modulo(self.q)
+        c0 = (a * secret_key + plaintext + e).change_modulo(self.q)
+        c1 = a
+        return Ciphertext(c0, c1)
 
     def rotate(self, ctx, k):  # compute f(X^k) mod (X^{m//2}+1, q)
         x_power_k_poly = [0]*(k+1)
@@ -44,17 +39,21 @@ class CKKS:
     def generate_swk_core(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
         return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
 
-    def switch_key(self, ct, swk):
-        q = ct[0].mod
-        n = ct[0].m
-        minus_one = RingElement(Polynomial([-1]), n, q)
-        return [ct[0]-(ct[1]*swk[0]),  minus_one* ct[1]*swk[1]]
 
-    def assert_equal(self, ctx, sk, plaintext_expected, max_error):
-        plaintext_actual = self.decrypt(ctx, sk)
-        diff = plaintext_actual - plaintext_expected
-        result = diff.canonical_norm() <= max_error
-        assert result, "actual diff " + str(diff.canonical_norm())
+class Ciphertext:
+    def __init__(self, c0, c1):
+        self.c0 = c0
+        self.c1 = c1
+        self.q = self.c0.mod
+        self.n = self.c0.m
+
+    def switch_key(self, swk):
+        minus_one = RingElement(Polynomial([-1]), self.n, self.q)
+        new_ctx = Ciphertext(self.c0-(self.c1*swk.c0),  minus_one*self.c1*swk.c1)
+        return new_ctx
+
+    def decrypt(self, secret_key):
+        return self.c0 - (self.c1*secret_key).change_modulo(self.q)
 
 if __name__ == '__main__':
     main()
