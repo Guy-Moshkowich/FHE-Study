@@ -1,6 +1,6 @@
 from RLWE.ring_element import RingElement
 from numpy.polynomial import Polynomial
-from bgv import BGV
+from BGV.bgv import BGV
 
 def main():
     bgv = BGV(m_power=4, q=10000, p=2, N=10, max_added_noise=10)

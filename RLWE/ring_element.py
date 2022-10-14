@@ -2,12 +2,12 @@ import numpy.polynomial.polynomial
 from numpy.polynomial import Polynomial
 import random
 import numpy as np
-import math
 import Utils.utils
 
 
 class RingElement:
     primitive_roots =[]
+    poly: Polynomial
 
     def __init__(self, poly: Polynomial, m, mod):
         self.mod = mod
@@ -17,11 +17,10 @@ class RingElement:
         if len(RingElement.primitive_roots) == 0:
             RingElement.primitive_roots = Utils.utils.get_nth_primitive_roots_of_unity(self.m)
 
-
     def get_cyclotomic(self): #X^{m/2}+1
         phi_m = [0]*(self.m//2 + 1)
         phi_m[0] = 1
-        phi_m[-1]=1
+        phi_m[-1] = 1
         return Polynomial(phi_m)
 
     def __add__(self, other):
@@ -54,8 +53,17 @@ class RingElement:
     def random(cls, m, mod, max_range=0):
         if max_range == 0:
             max_range = m #TODO: replace with m
-        poly = Polynomial([random.randint(0, max_range) for i in range(0, m)])
-        return cls(poly, m, mod)
+        coeffs = []
+        for i in range(m//2):
+            random_bit = random.randint(0, max_range)
+            coeffs.append(random_bit)
+        poly = Polynomial(coeffs)
+        return cls(poly, m=m, mod=mod)
+
+    @classmethod
+    def random2(cls, m, mod):
+        poly = Polynomial([random.randrange(2) - 1 for i in range(0, m//2)])
+        return cls(poly, m=m, mod=mod)
 
     @classmethod
     def random_binary(cls, m, mod):
@@ -71,9 +79,9 @@ class RingElement:
         return RingElement(self.poly, self.m, new_modulo)
 
     def modulo(self, poly, mod):
-        poly_modulo_phim = np.flip(np.polydiv(np.flip(poly.coef), np.flip(self.phi_m.coef))[1])
-        poly_modulo_phim_q =  Polynomial([x % mod for x in poly_modulo_phim])
-        return poly_modulo_phim_q
+        poly_modulo_phi_m = np.flip(np.polydiv(np.flip(poly.coef), np.flip(self.phi_m.coef))[1])
+        poly_modulo_phi_m_q = Polynomial([x % mod for x in poly_modulo_phi_m])
+        return poly_modulo_phi_m_q
 
     def compose(self, g: Polynomial):  # compute composition of self.poly and g mod (X^{m//2}+1, mod)
         g_poly1d = np.poly1d(g.coef[::-1])
@@ -95,6 +103,8 @@ class RingElement:
             return abs(self.mod - element)
 
     def __str__(self):
-        return str(self.poly.coef[:10])
+        return 'first 10 coefficients:' + str(self.poly.coef[:10])
 
-
+    @classmethod
+    def const(cls, val, n, q):
+        return RingElement(Polynomial([val]), n, q)

@@ -78,3 +78,10 @@ class TestRingElement(unittest.TestCase):
         mod = 10000
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
+
+    # def test_norm_canonical_binary_a(self):
+    #     a = RingElement.random_binary(m=2**10, mod=100)
+    #     e = RingElement.small_gauss(m=2**10, mod=100)
+    #     print("e.canonical_norm(): ", e.canonical_norm());
+    #     print("a.canonical_norm(): ", a.canonical_norm());
+    #     print("ae.canonical_norm(): ", (a*e).canonical_norm());

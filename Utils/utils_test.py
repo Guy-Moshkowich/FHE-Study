@@ -23,7 +23,6 @@ class TestUtils(unittest.TestCase):
     def test_bit_decomp_poly(self):
         orig_poly = Polynomial([3,4,5])
         result = bit_decomp_poly(orig_poly, 3) #3+4x+5x^2
-        # print('result: ', result)
         reconstruct = Polynomial([0])
         for i in range(len(result)):
             for a in result[i].coef:
