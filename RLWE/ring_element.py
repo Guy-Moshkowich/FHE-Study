@@ -2,22 +2,22 @@ import numpy.polynomial.polynomial
 from numpy.polynomial import Polynomial
 import random
 import numpy as np
-import Utils.utils
+from Utils import utils
 
 
 class RingElement:
-    primitive_roots =[]
+    primitive_roots = []
     poly: Polynomial
 
-    def __init__(self, poly: Polynomial, m, mod):
+    def __init__(self, poly: Polynomial, m: int, mod: int):
         self.mod = mod
         self.m = m
         self.phi_m = self.get_cyclotomic()
-        self.poly = self.modulo(poly, mod)
+        self.poly = self.modulo(poly, self.mod, self.phi_m)
         if len(RingElement.primitive_roots) == 0:
-            RingElement.primitive_roots = Utils.utils.get_nth_primitive_roots_of_unity(self.m)
+            RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
 
-    def get_cyclotomic(self): #X^{m/2}+1
+    def get_cyclotomic(self) -> Polynomial: #X^{m/2}+1
         phi_m = [0]*(self.m//2 + 1)
         phi_m[0] = 1
         phi_m[-1] = 1
@@ -26,23 +26,18 @@ class RingElement:
     def __add__(self, other):
         assert self.mod == other.mod
         assert self.m == other.m
-        result = self.modulo(self.poly + other.poly, self.mod)
-        return RingElement(result, self.m, self.mod)
+        return RingElement(self.poly + other.poly, self.m, self.mod)
 
     def __sub__(self, other):
         assert self.mod == other.mod
         assert self.m == other.m
-        result = self.modulo(self.poly - other.poly, self.mod)
-        return RingElement(result, self.m, self.mod)
+        return RingElement(self.poly - other.poly, self.m, self.mod)
 
     def __mul__(self, other):
         assert self.mod == other.mod
         assert self.m == other.m
-        result = self.modulo(self.poly * other.poly, self.mod)
-        return RingElement(result, self.m, self.mod)
+        return RingElement(self.poly * other.poly, self.m, self.mod)
 
-    def __str__(self):
-        return '[' + str(self.poly) + ', ' + str(self.m) + ', ' + str(self.mod) + ']'
 
     def __eq__(self, other):
         assert self.mod == other.mod
@@ -71,17 +66,18 @@ class RingElement:
 
 
     @classmethod
-    def small_gauss(cls, m, mod, mu=1, sigma=0.5):
+    def small_gauss(cls, m, mod):
         small_poly = Polynomial([int(random.gauss(mu=1, sigma=0.5)-1) for i in range(0, m//2)])
         return cls(small_poly, m, mod)
 
     def change_modulo(self, new_modulo):
         return RingElement(self.poly, self.m, new_modulo)
 
-    def modulo(self, poly, mod):
-        poly_modulo_phi_m = np.flip(np.polydiv(np.flip(poly.coef), np.flip(self.phi_m.coef))[1])
-        poly_modulo_phi_m_q = Polynomial([x % mod for x in poly_modulo_phi_m])
-        return poly_modulo_phi_m_q
+    def modulo(self, poly: Polynomial, mod: int, phi_m: Polynomial):
+        poly_modulo_phi_m = np.flip(np.polydiv(np.flip(poly.coef), np.flip(phi_m.coef))[1])
+        poly_modulo_phi_m_q = [x % mod for x in poly_modulo_phi_m]
+        poly_modulo_phi_m_q_recentered = [utils.recenter(x, mod) for x in poly_modulo_phi_m_q]
+        return Polynomial(poly_modulo_phi_m_q_recentered)
 
     def compose(self, g: Polynomial):  # compute composition of self.poly and g mod (X^{m//2}+1, mod)
         g_poly1d = np.poly1d(g.coef[::-1])
@@ -91,19 +87,14 @@ class RingElement:
     def canonical_norm(self):
         evals_abs = []
         for x in RingElement.primitive_roots:
-            coef_transformed = [self.transform_mod_div_2_center(x) for x in self.poly.coef]
-            eval = numpy.polynomial.polynomial.polyval(x, coef_transformed)
+            eval = numpy.polynomial.polynomial.polyval(x, self.poly.coef)
             evals_abs.append(abs(eval))
         return max(evals_abs)
 
-    def transform_mod_div_2_center(self, element):
-        if element <= self.mod // 2:
-            return element
-        else:
-            return abs(self.mod - element)
+
 
     def __str__(self):
-        return 'first 10 coefficients:' + str(self.poly.coef[:10])
+        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.m) + ', modulo: ' + str(self.mod)
 
     @classmethod
     def const(cls, val, n, q):

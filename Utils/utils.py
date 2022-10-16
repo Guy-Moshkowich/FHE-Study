@@ -19,7 +19,7 @@ def bit_decomp(poly_list, size: int):
     return flat_list
 
 
-def bit_decomp_poly(poly: Polynomial, size: int):
+def bit_decomp_poly(poly: Polynomial, size: int) -> list[Polynomial]:
     result = []
     for c in poly.coef:
         result.append(bit_decomp_int(c, size))
@@ -37,7 +37,7 @@ def bit_decomp_int(z: int, size: int):
     return result
 
 
-def powers_of_2(poly_list, size: int):
+def powers_of_2(poly_list, size: int) -> list[Polynomial]:
     result = []
     for i in range(size):
         result.extend([2** i * x for x in poly_list])
@@ -53,3 +53,14 @@ def get_canonical_error(ctx, sk, plaintext_expected):
     plaintext_actual = ctx.decrypt(sk)
     diff = plaintext_actual - plaintext_expected
     return diff.canonical_norm()
+
+
+def round(poly) -> Polynomial:
+    return Polynomial([math.ceil(c) for c in poly.coef])
+
+
+def recenter(element: int, mod: int) -> int:
+    if element <= mod // 2:
+        return element
+    else:
+        return -abs(mod - element)

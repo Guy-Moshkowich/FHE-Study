@@ -1,13 +1,15 @@
 from RLWE.ring_element import RingElement
-from numpy.polynomial import Polynomial
 from Utils.utils import *
-import Utils.utils
+from math import floor
+
 
 class CKKS:
 
-    def __init__(self, logn, q, max_added_noise=5):
-        self.n = 2**logn
+    def __init__(self, log_n: int, q: int, p: int = 1, max_added_noise=5):
+        self.n = 2 ** log_n
         self.q = q
+        self.p = p
+        self.p_inv = 1/p
         self.max_added_noise = max_added_noise
         self.secret_key = RingElement.random(self.n, self.q)
         self.k = 2
@@ -32,20 +34,21 @@ class CKKS:
         ctx_compose = [ctx[0].compose(x_power_k), ctx[1].compose(x_power_k)]
         # TODO: key switch.
 
-    def generate_swk(self, source_key: RingElement, target_key: RingElement):
+    def generate_swk_bit_decomp(self, source_key: RingElement, target_key: RingElement):
         swk = []
         for i in range(math.ceil(math.log2(self.q))):
             a = RingElement.random(self.n, self.q)
             e = RingElement.small_gauss(self.n, self.q)
             two_power_i = RingElement.const(2**i, self.n, self.q)
-            a_swk = self.generate_swk_core(two_power_i * source_key, target_key, a, e)
+            a_swk = self.generate_swk_core_bit_decomp(two_power_i * source_key, target_key, a, e)
             error = get_canonical_error(a_swk, target_key, two_power_i * source_key)
             assert error < 20, "error: " + str(error)
             swk.append(a_swk)
         return swk
 
-    def generate_swk_core(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
+    def generate_swk_core_bit_decomp(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
         return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
+
 
 
 class Ciphertext:
@@ -61,12 +64,12 @@ class Ciphertext:
     def __add__(self, other):
         return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)
 
-    def switch_key(self, swk: list["Ciphertext"]):
+    def switch_key_bit_decomp(self, swk: list["Ciphertext"]):
         c1_decomp = bit_decomp([self.c1.poly], math.ceil(math.log2(self.q)))
         zero = RingElement(Polynomial([0]), self.n, self.q)
         for i in range(len(c1_decomp)):
             tmp_ctx = Ciphertext(zero, RingElement(c1_decomp[i], self.n, self.q))
-            tmp_ctx.switch_key_basic(swk[i])
+            tmp_ctx.switch_key_bit_decomp_basic(swk[i])
             if i == 0:
                 new_ctx = tmp_ctx
             else:
@@ -74,13 +77,19 @@ class Ciphertext:
         new_ctx += Ciphertext(self.c0, zero)
         return new_ctx
 
-    def switch_key_basic(self, swk):
+    def switch_key_bit_decomp_basic(self, swk):
         minus_one = RingElement(Polynomial([-1]), self.n, self.q)
         new_ctx = Ciphertext(self.c0-(self.c1*swk.c0),  minus_one*self.c1*swk.c1)
         return new_ctx
 
+    def switch_key(self, swk, p_inv):
+        minus_one = RingElement(Polynomial([-1]), self.n, self.q)
+        new_ctx = Ciphertext(self.c0-floor(p_inv*(self.c1*swk.c0)),  floor(minus_one*p_inv*self.c1*swk.c1))
+        return new_ctx
+
     def decrypt(self, secret_key):
         return self.c0 - (self.c1*secret_key).change_modulo(self.q)
+
 
 if __name__ == '__main__':
     main()

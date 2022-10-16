@@ -2,11 +2,10 @@ import unittest
 import sys
 import os
 sys.path.append(os.path.abspath("../RLWE/"))
+sys.path.append(os.path.abspath("../Utils/"))
 from ring_element import RingElement
 from numpy.polynomial import Polynomial
-import random
-import math
-
+from Utils import utils
 
 class TestRingElement(unittest.TestCase):
 
@@ -29,6 +28,7 @@ class TestRingElement(unittest.TestCase):
         r1 = RingElement(poly, self.m, self.q)
         r2 = RingElement(poly + 5 * r1.get_cyclotomic(), self.m, self.q)
         self.assertTrue(r1 == r2)
+
 
     def test_add(self):
         r1 = RingElement(Polynomial([2, 3]), self.m, self.q)
@@ -69,15 +69,38 @@ class TestRingElement(unittest.TestCase):
         expected = RingElement(Polynomial([15, 99, 249, 123]), 8, 256)
         self.assertEqual(expected, result)
 
-    # def test_norm(self):
-    #     r = RingElement(Polynomial([1,2,3,4]),8,256)
-    #     self.assertEqual(r.norm(),4)
-
     def test_norm_canonical(self):
         m = 2**10
         mod = 10000
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
+
+    # def test_ae_size_for_binary_a(self):
+    #     n = 1024
+    #     q = 1000
+    #     a = RingElement.random_binary(n, q)
+    #     a_div_2 = Polynomial([c/4 for c in a.poly.coef])
+    #     e = RingElement.small_gauss(n, q)
+    #     a_div_2_times_e = RingElement(utils.round(a_div_2 * e.poly), n, q)
+    #     self.assertTrue((a_div_2_times_e).canonical_norm() < 50)
+
+    # def test_ae_size_for_non_binary_a(self):
+    #     n = 1024
+    #     q = 100
+    #     a = RingElement.random(n, q)
+    #     e = RingElement.small_gauss(n, q)
+    #     a_bit_decomp_list = utils.bit_decomp_poly(a.poly, q)
+    #     ae = RingElement.const(0, n, q)
+    #     for a_binary in a_bit_decomp_list:
+    #         print('a_binary: ', a_binary)
+    #         a_binary_div_2 = Polynomial([c/2 for c in a_binary.coef])
+    #         a_binary_div_2_times_e = RingElement(utils.round(a_binary_div_2 * e.poly), n, q)
+    #         print('a_binary_div_2_times_e_norm():', a_binary_div_2_times_e.canonical_norm())
+    #
+    #         ae += a_binary_div_2_times_e
+    #     print('(ae).canonical_norm():', (ae).canonical_norm())
+    #     self.assertTrue((ae).canonical_norm() < 50)
+
 
     # def test_norm_canonical_binary_a(self):
     #     a = RingElement.random_binary(m=2**10, mod=100)
