@@ -56,7 +56,7 @@ class RingElement:
         return cls(poly, m=m, mod=mod)
 
     @classmethod
-    def random2(cls, m, mod):
+    def random_ternary(cls, m, mod):
         poly = Polynomial([random.randrange(2) - 1 for i in range(0, m//2)])
         return cls(poly, m=m, mod=mod)
 
@@ -90,7 +90,6 @@ class RingElement:
             eval = numpy.polynomial.polynomial.polyval(x, self.poly.coef)
             evals_abs.append(abs(eval))
         return max(evals_abs)
-
 
 
     def __str__(self):

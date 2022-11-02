@@ -1,7 +1,6 @@
 from RLWE.ring_element import RingElement
 from Utils.utils import *
-from math import floor
-
+from Utils.utils import ceil
 
 class CKKS:
 
@@ -9,9 +8,8 @@ class CKKS:
         self.n = 2 ** log_n
         self.q = q
         self.p = p
-        self.p_inv = 1/p
         self.max_added_noise = max_added_noise
-        self.secret_key = RingElement.random(self.n, self.q)
+        self.secret_key = RingElement.random_ternary(self.n, self.q)
         self.k = 2
         self.max_error = 10#**(-5)
 
@@ -21,12 +19,13 @@ class CKKS:
         return self.encrypt_core(plaintext, a, self.secret_key, e)
 
     # ciphertext:= [a * secret_key + plaintext + e, a]
-    def encrypt_core(self, plaintext:RingElement, a:RingElement, secret_key:RingElement, e:RingElement):
-        c0 = (a * secret_key + plaintext + e).change_modulo(self.q)
+    def encrypt_core(self, plaintext: RingElement, a: RingElement, secret_key: RingElement, e: RingElement):
+        c0 = a * secret_key + plaintext + e
         c1 = a
         return Ciphertext(c0, c1)
 
-    def rotate(self, ctx, k):  # compute f(X^k) mod (X^{m//2}+1, q)
+    """compute f(X^k) mod (X^{m//2}+1, q) """
+    def rotate(self, ctx, k):
         x_power_k_poly = [0]*(k+1)
         x_power_k_poly.extend(1)
         x_power_k = Polynomial(x_power_k_poly)
@@ -49,6 +48,13 @@ class CKKS:
     def generate_swk_core_bit_decomp(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
         return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
 
+    def generate_swk(self, source_key: RingElement, target_key: RingElement):
+        a = RingElement.random(self.n, self.q * self.p)
+        e = RingElement.small_gauss(self.n, self.q * self.p)
+        plaintext = self.p * source_key.poly
+        c0 = RingElement(a.poly * target_key.poly + plaintext + e.poly, self.n, self.q * self.p)
+        c1 = a
+        return Ciphertext(c0, c1)
 
 
 class Ciphertext:
@@ -82,13 +88,15 @@ class Ciphertext:
         new_ctx = Ciphertext(self.c0-(self.c1*swk.c0),  minus_one*self.c1*swk.c1)
         return new_ctx
 
-    def switch_key(self, swk, p_inv):
-        minus_one = RingElement(Polynomial([-1]), self.n, self.q)
-        new_ctx = Ciphertext(self.c0-floor(p_inv*(self.c1*swk.c0)),  floor(minus_one*p_inv*self.c1*swk.c1))
-        return new_ctx
+    def switch_key(self, swk, p):
+        p_inv = 1/p
+        new_c0 = RingElement(self.c0.poly - ceil(p_inv * self.c1.poly * swk.c0.poly), self.n, self.q)
+        new_c1 = RingElement(ceil((-1) * p_inv * self.c1.poly * swk.c1.poly), self.n, self.q)
+        assert (new_c1 - RingElement(ceil((-1) * p_inv * self.c1.poly * swk.c1.poly), self.n, self.q)).canonical_norm() < 10
+        return Ciphertext(new_c0, new_c1)
 
     def decrypt(self, secret_key):
-        return self.c0 - (self.c1*secret_key).change_modulo(self.q)
+        return self.c0 - (self.c1*secret_key)
 
 
 if __name__ == '__main__':

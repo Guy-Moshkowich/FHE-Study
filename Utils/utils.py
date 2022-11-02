@@ -55,7 +55,7 @@ def get_canonical_error(ctx, sk, plaintext_expected):
     return diff.canonical_norm()
 
 
-def round(poly) -> Polynomial:
+def ceil(poly: Polynomial) -> Polynomial:
     return Polynomial([math.ceil(c) for c in poly.coef])
 
 

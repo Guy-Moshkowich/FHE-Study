@@ -14,7 +14,7 @@ class TestCkks(unittest.TestCase):
 
     def test_encrypt_decrypt(self):
         ckks = CKKS(log_n=10, q=1000)
-        plaintext = RingElement.random2(ckks.n, ckks.q)
+        plaintext = RingElement.random_ternary(ckks.n, ckks.q)
         ct = ckks.encrypt(plaintext)
         self.assert_equal(ct, ckks.secret_key, plaintext, 20)
 
@@ -92,9 +92,7 @@ class TestCkks(unittest.TestCase):
             ctx = ckks.encrypt(plaintext)
             ctx_acc += ctx
             expected_plaintext += plaintext
-        self.assert_equal(ctx_acc, ckks.secret_key, expected_plaintext, 30)
-
-
+        self.assert_equal(ctx_acc, ckks.secret_key, expected_plaintext, 50)
 
     # def test_binary_switch_key(self):
     #     ckks = CKKS(log_n=10, q=100)
@@ -107,17 +105,39 @@ class TestCkks(unittest.TestCase):
     #     ct_wrt_s1 = ct_wrt_s.switch_key_bit_decomp_basic(swk_from_s_to_s1)
     #     self.assert_equal(ct_wrt_s1, s1, plaintext, 200)
 
-    # def test_switch_key(self): # commented out 16/10/22
-    #     ckks = CKKS(log_n=10, q=1009, p=1013)
-    #     plaintext = RingElement.random(ckks.n, ckks.q)
-    #     s1 = RingElement.random(ckks.n, ckks.q)
-    #     s = ckks.secret_key
-    #     swk_from_s_to_s1 = ckks.generate_swk_bit_decomp(s, s1)
-    #     self.assert_equal(swk_from_s_to_s1[0], s1, s, 20)
-    #     ct_wrt_s = ckks.encrypt(plaintext)
-    #     ct_wrt_s1 = ct_wrt_s.switch_key(swk_from_s_to_s1, ckks.p_inv)
-    #     self.assert_equal(ct_wrt_s1, s1, plaintext, 200)
+    def test_swk_gen(self):
+        ckks = CKKS(log_n=10, q=1009, p=1013)
+        s1 = RingElement.random(ckks.n, ckks.q)
+        s = ckks.secret_key
+        swk_from_s_to_s1 = ckks.generate_swk(s, s1)
+        plaintext_poly = swk_from_s_to_s1.c0.poly-swk_from_s_to_s1.c1.poly*s1.poly
+        error = (RingElement(plaintext_poly-ckks.p*s.poly, ckks.n, ckks.q*ckks.p).canonical_norm())
+        self.assertTrue(error < 20)
+
+    def test_switch_key(self):
+        ckks = CKKS(log_n=10, q=1009, p=7789)
+        plaintext = RingElement.random(ckks.n, ckks.q)
+        s1 = RingElement.random_ternary(ckks.n, ckks.q)
+        s = ckks.secret_key
+        swk_from_s_to_s1 = ckks.generate_swk(s, s1)
+        ct_wrt_s = ckks.encrypt(plaintext)
+        diff = (ct_wrt_s.decrypt(s) - plaintext).canonical_norm()
+        self.assert_almost_equal(ct_wrt_s.decrypt(s), plaintext, eps=10)
+        ct_wrt_s1 = ct_wrt_s.switch_key(swk_from_s_to_s1, ckks.p)
+        expected_c1_after_key_switch = RingElement(utils.ceil((-1/ckks.p)*swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly), ckks.n, ckks.q)
+        self.assert_almost_equal(ct_wrt_s1.c1, expected_c1_after_key_switch, eps=20)
+        expected_c0_after_key_switch = RingElement(utils.ceil((-1/ckks.p)*(swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly * s1.poly) + plaintext.poly)
+                                                   , ckks.n, ckks.q)
+        self.assert_almost_equal(ct_wrt_s1.c0, expected_c0_after_key_switch, eps=30)
+        plaintext_result_poly = ct_wrt_s1.c0.poly - (ct_wrt_s1.c1.poly * s1.poly)
+        plaintext_result = RingElement(plaintext_result_poly, ckks.n, ckks.q)
+        diff = (plaintext_result - plaintext).canonical_norm()
+        self.assertLess(diff, 50)
 
     def assert_equal(self, ctx, sk, plaintext_expected, max_error):
         error = utils.get_canonical_error(ctx, sk, plaintext_expected)
         self.assertTrue(error <= max_error, "actual diff " + str(error))
+
+    def assert_almost_equal(self, elm1: RingElement, elm2: RingElement, eps):
+        diff = RingElement(elm1.poly - elm2.poly, elm1.m, elm1.mod).canonical_norm()
+        self.assertLess(diff, eps, "error: "+str(diff))
