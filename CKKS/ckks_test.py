@@ -66,8 +66,8 @@ class TestCkks(unittest.TestCase):
     def test_switch_key_basic_for_binary_a(self):
         self.ckks = CKKS(log_n=10, q=1000)
         plaintext = RingElement.random(self.ckks.n, self.ckks.q)
-        s = RingElement.random(self.ckks.n, self.ckks.q)
-        s_prime = RingElement.random(self.ckks.n, self.ckks.q)
+        s = self.ckks.generate_secret_key()
+        s_prime = self.ckks.generate_secret_key()
         a_prime = RingElement.random(self.ckks.n, self.ckks.q)
         e_prime = RingElement.small_gauss(self.ckks.n, self.ckks.q)
         swk_from_s_prime_to_s = self.ckks.generate_swk_core_bit_decomp(s_prime, s, a_prime, e_prime)
