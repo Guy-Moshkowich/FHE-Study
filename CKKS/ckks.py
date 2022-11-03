@@ -1,17 +1,32 @@
 from RLWE.ring_element import RingElement
 from Utils.utils import *
 from Utils.utils import ceil
+import random
 
 class CKKS:
+
+    h: int  # secret key Hamming weight
 
     def __init__(self, log_n: int, q: int, p: int = 1, max_added_noise=5):
         self.n = 2 ** log_n
         self.q = q
         self.p = p
         self.max_added_noise = max_added_noise
-        self.secret_key = RingElement.random_ternary(self.n, self.q)
         self.k = 2
         self.max_error = 10#**(-5)
+        self.h = 64
+        self.secret_key = self.generate_secret_key()
+
+    def generate_secret_key(self):
+        arr = [0]*(self.n // 2)
+        for i in range(self.h):
+            random_index = random.randrange(self.n // 2)
+            if random.randrange(2) == 1:
+                arr[random_index] = 1
+            else:
+                arr[random_index] = -1
+        return RingElement(Polynomial(arr), self.n, self.q)
+
 
     def encrypt(self, plaintext: RingElement):
         a = RingElement.random(self.n, self.q)
