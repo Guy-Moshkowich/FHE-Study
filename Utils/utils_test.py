@@ -1,6 +1,7 @@
 import unittest
 from utils import *
 import numpy
+import cmath
 
 class TestUtils(unittest.TestCase):
 
@@ -66,16 +67,32 @@ class TestUtils(unittest.TestCase):
         expected = np.dot(a, b)
         self.assertEqual(expected, result)
 
-    def test_nth_roots_of_unity(self):
+    def test_nth_primitive_roots_of_unity(self):
         roots = get_nth_primitive_roots_of_unity(4)
         numpy.testing.assert_almost_equal(roots[0].real, 0, 0.0001)
         numpy.testing.assert_almost_equal(roots[0].imag, 1, 0.0001)
         numpy.testing.assert_almost_equal(roots[1].real , 0, 0.0001)
         numpy.testing.assert_almost_equal(roots[1].imag, -1, 0.0001)
 
+    def test_conjugation_of_nth_primitive_roots_of_unity(self):
+        m = 8
+        roots = get_nth_primitive_roots_of_unity(m)
+        print(roots)
+        print(len(roots))
+        for i in range(len(roots)):
+            found_conju_pair = False;
+            for j in range(len(roots)):
+                if cmath.isclose(roots[i].conjugate(), roots[j]):
+                    print(str(roots[i]) + " -- " + str(roots[j]))
+                    found_conju_pair = True;
+            self.assertTrue(found_conju_pair)
+
     def test_recenter(self):
         self.assertTrue(recenter(5, 1000) == 5)
         self.assertTrue(recenter(999, 1000) == -1, 'recenter: ' + str(recenter(999, 1000)))
+
+
+
 
     # def test_bit_comp_with_powers_of_2_different_dimensions(self):
     #     bgv = BGV(m_power=4, q=256, p=2, N=10)
