@@ -143,21 +143,7 @@ class TestCkks(unittest.TestCase):
         diff = (plaintext_result - plaintext).canonical_norm()
         self.assertLess(diff, 200)
 
-    def test_noise_times_binary(self):
-        log_n = 15
-        n = 2**log_n
-        q = 0x200000440001
-        for i in range(10):
-            e = RingElement.const(0, n, q)
-            while e == RingElement.const(0, n, q):
-                e = RingElement.small_gauss(n, q)
-            a = RingElement.random_binary(n, q)
-            print('a=', a)
-            print('e=', e)
-            print('|a|=', a.canonical_norm())
-            print('|e|=', e.canonical_norm())
-            print('|ae|=', (a*e).canonical_norm())
-            print('----')
+
 
     def assert_equal(self, ctx, sk, plaintext_expected, max_error):
         error = utils.get_canonical_error(ctx, sk, plaintext_expected)

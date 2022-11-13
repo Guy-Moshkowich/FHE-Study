@@ -27,10 +27,9 @@ class CKKS:
                 arr[random_index] = -1
         return RingElement(Polynomial(arr), self.n, self.q)
 
-
     def encrypt(self, plaintext: RingElement):
         a = RingElement.random(self.n, self.q)
-        e = 0
+        e = RingElement.const(0, self.n, self.q)
         while e == RingElement.const(0,self.n, self.q):
             e = RingElement.small_gauss(self.n, self.q)
         return self.encrypt_core(plaintext, a, self.secret_key, e)

@@ -75,6 +75,7 @@ class TestRingElement(unittest.TestCase):
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
 
+
     # def test_ae_size_for_binary_a(self):
     #     n = 1024
     #     q = 1000

@@ -47,7 +47,7 @@ class RingElement:
     @classmethod
     def random(cls, m, mod, max_range=0):
         if max_range == 0:
-            max_range = m #TODO: replace with m
+            max_range = mod//2  # modulo range -mod/2 .. +mod/2
         coeffs = []
         for i in range(m//2):
             random_bit = random.randint(0, max_range)

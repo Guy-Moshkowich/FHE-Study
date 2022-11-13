@@ -77,13 +77,10 @@ class TestUtils(unittest.TestCase):
     def test_conjugation_of_nth_primitive_roots_of_unity(self):
         m = 8
         roots = get_nth_primitive_roots_of_unity(m)
-        print(roots)
-        print(len(roots))
         for i in range(len(roots)):
             found_conju_pair = False;
             for j in range(len(roots)):
                 if cmath.isclose(roots[i].conjugate(), roots[j]):
-                    print(str(roots[i]) + " -- " + str(roots[j]))
                     found_conju_pair = True;
             self.assertTrue(found_conju_pair)
 
