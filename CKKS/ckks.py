@@ -30,7 +30,9 @@ class CKKS:
 
     def encrypt(self, plaintext: RingElement):
         a = RingElement.random(self.n, self.q)
-        e = RingElement.small_gauss(self.n, self.q)
+        e = 0
+        while e == RingElement.const(0,self.n, self.q):
+            e = RingElement.small_gauss(self.n, self.q)
         return self.encrypt_core(plaintext, a, self.secret_key, e)
 
     # ciphertext:= [a * secret_key + plaintext + e, a]
