@@ -14,8 +14,8 @@ class RingElement:
         self.m = m
         self.phi_m = self.get_cyclotomic()
         self.poly = self.modulo(poly, self.mod, self.phi_m)
-        if len(RingElement.primitive_roots) == 0:
-            RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
+        # if len(RingElement.primitive_roots) == 0:
+        RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
 
     def get_cyclotomic(self) -> Polynomial: #X^{m/2}+1
         phi_m = [0]*(self.m//2 + 1)
@@ -85,12 +85,7 @@ class RingElement:
         return RingElement(Polynomial(compose_poly1d.coefficients[::-1]), self.m, self.mod)
 
     def canonical_norm(self):
-        evals_abs = []
-        for x in RingElement.primitive_roots:
-            eval = numpy.polynomial.polynomial.polyval(x, self.poly.coef)
-            evals_abs.append(abs(eval))
-        return max(evals_abs)
-
+        return utils.canonical_norm(self.poly, self.m)
 
     def __str__(self):
         return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.m) + ', modulo: ' + str(self.mod)

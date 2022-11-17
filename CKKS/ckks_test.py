@@ -63,24 +63,24 @@ class TestCkks(unittest.TestCase):
     #         two_power_i = RingElement.const(2**i, ckks.n, ckks.q)
     #         self.assert_equal(swk[i], s_prime, two_power_i*s, 1000)
 
-    def test_switch_key_basic_for_binary_a(self):
-        self.ckks = CKKS(log_n=10, q=1000)
-        plaintext = RingElement.random(self.ckks.n, self.ckks.q)
-        s = self.ckks.generate_secret_key()
-        s_prime = self.ckks.generate_secret_key()
-        a_prime = RingElement.random(self.ckks.n, self.ckks.q)
-        e_prime = RingElement.small_gauss(self.ckks.n, self.ckks.q)
-        swk_from_s_prime_to_s = self.ckks.generate_swk_core_bit_decomp(s_prime, s, a_prime, e_prime)
-        self.assert_equal(swk_from_s_prime_to_s, s, s_prime, 20)
-
-        a = RingElement.random_binary(self.ckks.n, self.ckks.q)
-        e = RingElement.small_gauss(self.ckks.n, self.ckks.q)
-
-        ct_wrt_s_prime = self.ckks.encrypt_core(plaintext, a, s_prime, e)
-        self.assert_equal(ct_wrt_s_prime, s_prime, plaintext, 20)
-
-        ct_wrt_s = ct_wrt_s_prime.switch_key_bit_decomp_basic(swk_from_s_prime_to_s)
-        self.assert_equal(ct_wrt_s, s, plaintext, 150)
+    # def test_switch_key_basic_for_binary_a(self):
+    #     self.ckks = CKKS(log_n=10, q=1000)
+    #     plaintext = RingElement.random(self.ckks.n, self.ckks.q)
+    #     s = self.ckks.generate_secret_key()
+    #     s_prime = self.ckks.generate_secret_key()
+    #     a_prime = RingElement.random(self.ckks.n, self.ckks.q)
+    #     e_prime = RingElement.small_gauss(self.ckks.n, self.ckks.q)
+    #     swk_from_s_prime_to_s = self.ckks.generate_swk_core_bit_decomp(s_prime, s, a_prime, e_prime)
+    #     self.assert_equal(swk_from_s_prime_to_s, s, s_prime, 20)
+    #
+    #     a = RingElement.random_binary(self.ckks.n, self.ckks.q)
+    #     e = RingElement.small_gauss(self.ckks.n, self.ckks.q)
+    #
+    #     ct_wrt_s_prime = self.ckks.encrypt_core(plaintext, a, s_prime, e)
+    #     self.assert_equal(ct_wrt_s_prime, s_prime, plaintext, 20)
+    #
+    #     ct_wrt_s = ct_wrt_s_prime.switch_key_bit_decomp_basic(swk_from_s_prime_to_s)
+    #     self.assert_equal(ct_wrt_s, s, plaintext, 150)
 
     def test_add(self):
         ckks = CKKS(log_n=10, q=1000)

@@ -64,3 +64,11 @@ def recenter(element: int, mod: int) -> int:
         return element
     else:
         return -abs(mod - element)
+
+
+def canonical_norm(p: Polynomial, cyclotomic_index: int):
+    eval_abs = []
+    for val in get_nth_primitive_roots_of_unity(cyclotomic_index):
+        eval_result = np.polynomial.polynomial.polyval(val, p.coef)
+        eval_abs.append(abs(eval_result))
+    return max(eval_abs)
