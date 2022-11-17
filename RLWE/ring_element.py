@@ -1,4 +1,3 @@
-import numpy.polynomial.polynomial
 from numpy.polynomial import Polynomial
 import random
 import numpy as np
@@ -12,16 +11,15 @@ class RingElement:
     def __init__(self, poly: Polynomial, m: int, mod: int):
         self.mod = mod
         self.m = m
-        self.phi_m = self.get_cyclotomic()
+        self.phi_m = utils.build_cyclotomic_poly(self.m)
         self.poly = self.modulo(poly, self.mod, self.phi_m)
-        # if len(RingElement.primitive_roots) == 0:
         RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
 
-    def get_cyclotomic(self) -> Polynomial: #X^{m/2}+1
-        phi_m = [0]*(self.m//2 + 1)
-        phi_m[0] = 1
-        phi_m[-1] = 1
-        return Polynomial(phi_m)
+    # def get_cyclotomic(self) -> Polynomial: #X^{m/2}+1
+    #     phi_m = [0]*(self.m//2 + 1)
+    #     phi_m[0] = 1
+    #     phi_m[-1] = 1
+    #     return Polynomial(phi_m)
 
     def __add__(self, other):
         assert self.mod == other.mod
@@ -38,19 +36,24 @@ class RingElement:
         assert self.m == other.m
         return RingElement(self.poly * other.poly, self.m, self.mod)
 
-
     def __eq__(self, other):
         assert self.mod == other.mod
         assert self.m == other.m
         return all(v == 0 for v in (self.poly-other.poly).coef)
 
+    def __str__(self):
+        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.m) + ', modulo: ' + str(
+            self.mod)
+
     @classmethod
-    def random(cls, m, mod, max_range=0):
-        if max_range == 0:
+    def random(cls, m, mod, max_range=0, min_range=0, hamming_weight=0):
+        if max_range == 0: #TODO: the default should be max_int and min_int
             max_range = mod//2  # modulo range -mod/2 .. +mod/2
+            min_range = -mod//2
+            hamming_weight = m//2
         coeffs = []
         for i in range(m//2):
-            random_bit = random.randint(0, max_range)
+            random_bit = random.randint(min_range, max_range)
             coeffs.append(random_bit)
         poly = Polynomial(coeffs)
         return cls(poly, m=m, mod=mod)
@@ -61,8 +64,8 @@ class RingElement:
         return cls(poly, m=m, mod=mod)
 
     @classmethod
-    def random_binary(cls, m, mod):
-        return RingElement.random(m, mod, max_range=1)
+    def random_binary(cls, m: int, mod: int, hamming_weight: int = 0):
+        return RingElement.random(m, mod, max_range=1, min_range=0, hamming_weight=hamming_weight)
 
 
     @classmethod
@@ -74,8 +77,8 @@ class RingElement:
         return RingElement(self.poly, self.m, new_modulo)
 
     def modulo(self, poly: Polynomial, mod: int, phi_m: Polynomial):
-        poly_modulo_phi_m = np.flip(np.polydiv(np.flip(poly.coef), np.flip(phi_m.coef))[1])
-        poly_modulo_phi_m_q = [x % mod for x in poly_modulo_phi_m]
+        poly_modulo_phi_m = utils.modulo_polynomial(poly, phi_m)
+        poly_modulo_phi_m_q = [x % mod for x in poly_modulo_phi_m.coef]
         poly_modulo_phi_m_q_recentered = [utils.recenter(x, mod) for x in poly_modulo_phi_m_q]
         return Polynomial(poly_modulo_phi_m_q_recentered)
 
@@ -87,9 +90,8 @@ class RingElement:
     def canonical_norm(self):
         return utils.canonical_norm(self.poly, self.m)
 
-    def __str__(self):
-        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.m) + ', modulo: ' + str(self.mod)
 
     @classmethod
     def const(cls, val, n, q):
         return RingElement(Polynomial([val]), n, q)
+

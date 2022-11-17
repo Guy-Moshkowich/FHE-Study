@@ -2,6 +2,8 @@ from numpy.polynomial import Polynomial
 import numpy as np
 from cmath import exp, pi
 import math
+import random
+
 
 def dot_prod(v1, v2):
     sum = 0
@@ -66,9 +68,48 @@ def recenter(element: int, mod: int) -> int:
         return -abs(mod - element)
 
 
+def recenter_polynomial(poly : Polynomial, mod: int) -> Polynomial:
+    new_coeffs = []
+    for c in poly.coef:
+        new_coeffs.append(recenter(c, mod))
+    return Polynomial(new_coeffs)
+
+
 def canonical_norm(p: Polynomial, cyclotomic_index: int):
     eval_abs = []
     for val in get_nth_primitive_roots_of_unity(cyclotomic_index):
         eval_result = np.polynomial.polynomial.polyval(val, p.coef)
         eval_abs.append(abs(eval_result))
     return max(eval_abs)
+
+
+# computes f(x) modulo g(x)
+def modulo_polynomial(f: Polynomial, g: Polynomial) -> Polynomial:
+    return Polynomial(np.flip(np.polydiv(np.flip(f.coef), np.flip(g.coef))[1]))
+
+
+# returns X^{m/2} + 1
+def build_cyclotomic_poly(cyclotomic_index: int) -> Polynomial:
+    assert math.log2(cyclotomic_index) == math.floor(math.log2(cyclotomic_index))
+    phi_m = [0]*(cyclotomic_index//2 + 1)
+    phi_m[0] = 1
+    phi_m[-1] = 1
+    return Polynomial(phi_m)
+
+
+def generate_ternary_polynomial(degree: int, hamming_weight: int) -> Polynomial:
+    arr = [0] * degree
+    for i in range(hamming_weight):
+        random_index = random.randrange(degree)
+        if random.randrange(2) == 1:
+            arr[random_index] = 1
+        else:
+            arr[random_index] = -1
+    return Polynomial(arr)
+
+
+def modulo_int(poly : Polynomial, mod: int):
+    mod_coeffs = []
+    for i in poly.coef:
+        mod_coeffs.append(i % mod)
+    return recenter_polynomial(Polynomial(mod_coeffs), mod)

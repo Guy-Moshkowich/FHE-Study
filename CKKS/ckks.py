@@ -1,3 +1,4 @@
+import Utils.utils
 from RLWE.ring_element import RingElement
 from Utils.utils import *
 from Utils.utils import ceil
@@ -18,14 +19,8 @@ class CKKS:
         self.secret_key = self.generate_secret_key()
 
     def generate_secret_key(self):
-        arr = [0]*(self.n // 2)
-        for i in range(self.h):
-            random_index = random.randrange(self.n // 2)
-            if random.randrange(2) == 1:
-                arr[random_index] = 1
-            else:
-                arr[random_index] = -1
-        return RingElement(Polynomial(arr), self.n, self.q)
+        t = Utils.utils.generate_ternary_polynomial(self.n//2, self.h)
+        return RingElement(t, self.n, self.q)
 
     def encrypt(self, plaintext: RingElement):
         a = RingElement.random(self.n, self.q)

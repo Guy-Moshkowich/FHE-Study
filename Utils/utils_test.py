@@ -88,8 +88,16 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(recenter(5, 1000) == 5)
         self.assertTrue(recenter(999, 1000) == -1, 'recenter: ' + str(recenter(999, 1000)))
 
+    def test_modulo_polynomial(self):
+        f = Polynomial([1, 2, 0, 3, 4])
+        g = Polynomial([2, 1, 1])
+        res = modulo_polynomial(f, g)
+        self.assertTrue((res.coef == [15, 11]).all())
 
-
+    def test_modulo_coeff(self):
+        f = Polynomial([1, 2, 0, 3, 4])
+        res = modulo_int(f, 2)
+        self.assertTrue((res.coef == [1, 0, 0, 1, 0]).all())
 
     # def test_bit_comp_with_powers_of_2_different_dimensions(self):
     #     bgv = BGV(m_power=4, q=256, p=2, N=10)
