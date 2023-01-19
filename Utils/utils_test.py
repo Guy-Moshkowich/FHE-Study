@@ -99,6 +99,48 @@ class TestUtils(unittest.TestCase):
         res = modulo_int(f, 2)
         self.assertTrue((res.coef == [1, 0, 0, 1, 0]).all())
 
+    # def test_generate_fft_matrix(self):
+    #     fft_rep, inv_fft_rep = generate_fft(8)
+    #     numpy.testing.assert_almost_equal(fft_rep[0][0], 1, 0.0001)
+    #     numpy.testing.assert_almost_equal(fft_rep[1][0], 1, 0.0001)
+    #     numpy.testing.assert_almost_equal(fft_rep[2][0], 1, 0.0001)
+    #     numpy.testing.assert_almost_equal(fft_rep[3][0], 1, 0.0001)
+        #
+        # numpy.testing.assert_almost_equal(fft_rep[0][1], 0.707 - 0.707j, 0.0001)
+        # numpy.testing.assert_almost_equal(fft_rep[1][1], -0.707 - 0.707j, 0.0001)
+        # numpy.testing.assert_almost_equal(fft_rep[2][1], -0.707 + 0.707j, 0.0001)
+        # numpy.testing.assert_almost_equal(fft_rep[3][1], 0.707 + 0.707j, 0.0001)
+        #
+        # numpy.testing.assert_almost_equal(inv_fft_rep[0][0], 1, 0.0001)
+        # numpy.testing.assert_almost_equal(inv_fft_rep[1][0], 1, 0.0001)
+        # numpy.testing.assert_almost_equal(inv_fft_rep[2][0], 1, 0.0001)
+        # numpy.testing.assert_almost_equal(inv_fft_rep[3][0], 1, 0.0001)
+
+    def test_decode(self):
+        U,U_conj = generate_canonical(8)
+        coeffs_rep = [10/4, math.sqrt(2), 10/4, math.sqrt(2)/2]
+        expected = [3+4j, 2-1j, 3-4j, 2+1j]
+        numpy.testing.assert_almost_equal(decode(U,U_conj, coeffs_rep), expected, 0.001)
+
+    def test_encode(self):
+        dim = 8
+        U, U_conj = generate_canonical(dim)
+        slots = [3+4j, 2-1j]
+        expected = [10/4, math.sqrt(2), 10/4, math.sqrt(2)/2]
+        numpy.testing.assert_almost_equal(encode(U,U_conj, dim, slots), expected, 0.001)
+
+    # def test_encode_decode_encode(self):
+    #     dim = 8
+    #     U, U_conj = generate_canonical(dim)
+    #     slots = [3 + 4j, 2 - 1j]
+    #     enc_res = encode(U,U_conj, dim, slots)
+    #     dec_res = decode(U,U_conj, enc_res)
+    #     print(dec_res)
+    #     print(dec_res[:len(dec_res)//2])
+    #     numpy.testing.assert_almost_equal(encode(U,U_conj, dim, dec_res[:len(dec_res)//2]), slots, 0.001)
+
+
+
     # def test_bit_comp_with_powers_of_2_different_dimensions(self):
     #     bgv = BGV(m_power=4, q=256, p=2, N=10)
     #     size = 8

@@ -2,7 +2,7 @@ import Utils.utils
 from RLWE.ring_element import RingElement
 from Utils.utils import *
 from Utils.utils import ceil
-import random
+import cmath
 
 class CKKS:
 
@@ -68,6 +68,8 @@ class CKKS:
         return Ciphertext(c0, c1)
 
 
+
+
 class Ciphertext:
     c0: RingElement
     c1: RingElement
@@ -102,13 +104,8 @@ class Ciphertext:
     def switch_key(self, swk, p):
         p_inv = 1/p
         new_c0 = RingElement(self.c0.poly - ceil(p_inv * self.c1.poly * swk.c0.poly), self.n, self.q)
-        new_c1 = RingElement(ceil((-1) * p_inv * self.c1.poly * swk.c1.poly), self.n, self.q)
-        assert (new_c1 - RingElement(ceil((-1) * p_inv * self.c1.poly * swk.c1.poly), self.n, self.q)).canonical_norm() < 10
+        new_c1 = RingElement(-ceil(p_inv * self.c1.poly * swk.c1.poly), self.n, self.q)
         return Ciphertext(new_c0, new_c1)
 
     def decrypt(self, secret_key):
         return self.c0 - (self.c1*secret_key)
-
-
-if __name__ == '__main__':
-    main()

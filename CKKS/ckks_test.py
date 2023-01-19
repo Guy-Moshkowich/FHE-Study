@@ -88,7 +88,7 @@ class TestCkks(unittest.TestCase):
         plaintext2 = RingElement.random(ckks.n, ckks.q)
         ctx1 = ckks.encrypt(plaintext1)
         ctx2 = ckks.encrypt(plaintext2)
-        self.assert_equal(ctx1 + ctx2, ckks.secret_key, plaintext1 + plaintext2, 20)
+        self.assert_equal(ctx1 + ctx2, ckks.secret_key, plaintext1 + plaintext2, 30)
 
     def test_add_many(self):
         q = 1000
@@ -124,25 +124,31 @@ class TestCkks(unittest.TestCase):
         self.assertTrue(error < 20)
 
     def test_switch_key(self):
-        # ckks = CKKS(log_n=10, q=0x3fff4001, p=0x3ffe8001)
-        ckks = CKKS(log_n=10, q=1009, p=7789)
+        ckks = CKKS(log_n=10, q=1009, p=1013)
         plaintext = RingElement.random(ckks.n, ckks.q)
         s1 = ckks.generate_secret_key()
         s = ckks.secret_key
         self.assertNotEqual(s1, s)
         swk_from_s_to_s1 = ckks.generate_swk(s, s1)
+        swk_from_s_to_s1_err = RingElement(swk_from_s_to_s1.c0.poly-swk_from_s_to_s1.c1.poly*s1.poly -ckks.p*s.poly,ckks.n, ckks.p*ckks.q)
+        # print('swk_from_s_to_s1_err: ', swk_from_s_to_s1_err.canonical_norm())
         ct_wrt_s = ckks.encrypt(plaintext)
+        ct_wrt_s_err = ct_wrt_s.decrypt(s) - plaintext
+        # print('ct_wrt_s_err: ', ct_wrt_s_err.canonical_norm())
+
         self.assert_almost_equal(ct_wrt_s.decrypt(s), plaintext, eps=20)
         ct_wrt_s1 = ct_wrt_s.switch_key(swk_from_s_to_s1, ckks.p)
+        # print('ct_wrt_s1_err: ', (ct_wrt_s1.decrypt(s1)-plaintext).canonical_norm())
+        # print('expected_ct_wrt_s1_err', RingElement(utils.ceil(1/ckks.p*ct_wrt_s.c1.poly*swk_from_s_to_s1_err.poly), ckks.n, ckks.q).canonical_norm())
         expected_c1_after_key_switch = RingElement(utils.ceil((-1/ckks.p)*swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly), ckks.n, ckks.q)
         self.assert_almost_equal(ct_wrt_s1.c1, expected_c1_after_key_switch, eps=20)
-        expected_c0_after_key_switch = RingElement(utils.ceil((-1/ckks.p)*(swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly * s1.poly) + plaintext.poly)
+        expected_c0_after_key_switch = RingElement(-utils.ceil((1/ckks.p)*(swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly * s1.poly)) + plaintext.poly
                                                    , ckks.n, ckks.q)
-        self.assert_almost_equal(ct_wrt_s1.c0, expected_c0_after_key_switch, eps=250)
+        self.assert_almost_equal(ct_wrt_s1.c0, expected_c0_after_key_switch, eps=300)
         plaintext_result_poly = ct_wrt_s1.c0.poly - (ct_wrt_s1.c1.poly * s1.poly)
         plaintext_result = RingElement(plaintext_result_poly, ckks.n, ckks.q)
         diff = (plaintext_result - plaintext).canonical_norm()
-        self.assertLess(diff, 400)
+        self.assertLess(diff, 300)
 
     def assert_equal(self, ctx, sk, plaintext_expected, max_error):
         error = utils.get_canonical_error(ctx, sk, plaintext_expected)

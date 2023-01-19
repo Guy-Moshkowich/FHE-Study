@@ -3,7 +3,7 @@ import numpy as np
 from cmath import exp, pi
 import math
 import random
-
+import cmath
 
 def dot_prod(v1, v2):
     sum = 0
@@ -113,3 +113,34 @@ def modulo_int(poly : Polynomial, mod: int):
     for i in poly.coef:
         mod_coeffs.append(i % mod)
     return recenter_polynomial(Polynomial(mod_coeffs), mod)
+
+
+def generate_canonical(n: int):
+    U = [[0] * (n//2) for i in range(n // 4)]
+    U_conj = [[0] * (n//2) for i in range(n // 4)]
+    for k in range(n // 4):
+        root_k = cmath.exp((2 * cmath.pi * 1j * (2 * k + 1)) / n)
+        for t in range(n//2):
+            U[k][t] = root_k ** t
+            U_conj[k][t] = np.conj(U[k][t])
+    return U, U_conj
+
+
+def decode(U, U_conj, plaintext):
+    result = []
+    for row in U:
+        result.append(np.inner(row, plaintext))
+    for row in U_conj:
+        result.append(np.inner(row, plaintext))
+    return result
+
+
+def encode(U, U_conj, dim, slots):
+    tmp1 = []
+    tmp2 = []
+    for row in np.array(U_conj).transpose():
+        tmp1.append((1/(dim//2))*np.inner(row, slots))
+    for row in np.array(U).transpose():
+        tmp2.append((1/(dim//2))*np.inner(row, [np.conj(slot) for slot in slots]))
+    result = [tmp1[i]+tmp2[i] for i in range(len(tmp1))]
+    return result
