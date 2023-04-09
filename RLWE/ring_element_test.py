@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath("../Utils/"))
 from ring_element import RingElement
 from numpy.polynomial import Polynomial
 from Utils import utils
+import numpy as np
 
 class TestRingElement(unittest.TestCase):
 
@@ -74,6 +75,32 @@ class TestRingElement(unittest.TestCase):
         mod = 10000
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
+
+    def test_rotate(self):
+        dim = 16
+        h = 4
+        q = 1000
+        t = utils.generate_ternary_polynomial(dim // 2, h)
+        sk = RingElement(t, dim, q)
+        U, U_conj = utils.generate_canonical(dim)
+        tmp1 = list(sk.poly.coef)
+        tmp1.extend([0 for i in range(len(tmp1), dim//2)])
+        slots = utils.decode(U, U_conj, tmp1)
+        sk_new = sk.rotate(5)
+        tmp2 = list(sk_new.poly.coef)
+        tmp2.extend([0 for i in range(len(tmp2), dim//2)])
+        slots_new = utils.decode(U, U_conj, tmp2)
+        for slot in slots:
+            found = False
+            for slot_new in slots_new:
+                if np.abs(slot - slot_new)>0.0001:
+                    found = True
+                    break
+            self.assertTrue(found)
+
+
+
+
 
 
     # def test_ae_size_for_binary_a(self):

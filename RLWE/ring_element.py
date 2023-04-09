@@ -15,11 +15,6 @@ class RingElement:
         self.poly = self.modulo(poly, self.mod, self.phi_m)
         RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
 
-    # def get_cyclotomic(self) -> Polynomial: #X^{m/2}+1
-    #     phi_m = [0]*(self.m//2 + 1)
-    #     phi_m[0] = 1
-    #     phi_m[-1] = 1
-    #     return Polynomial(phi_m)
 
     def __add__(self, other):
         assert self.mod == other.mod
@@ -89,6 +84,12 @@ class RingElement:
 
     def canonical_norm(self):
         return utils.canonical_norm(self.poly, self.m)
+
+    def rotate(self, k: int):
+        x_power_k_vec = [0]*k
+        x_power_k_vec.append(1)
+        x_power_k = Polynomial(x_power_k_vec)
+        return self.compose(x_power_k)
 
 
     @classmethod

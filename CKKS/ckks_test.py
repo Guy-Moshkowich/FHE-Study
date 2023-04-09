@@ -150,6 +150,9 @@ class TestCkks(unittest.TestCase):
         diff = (plaintext_result - plaintext).canonical_norm()
         self.assertLess(diff, 300)
 
+
+
+
     def assert_equal(self, ctx, sk, plaintext_expected, max_error):
         error = utils.get_canonical_error(ctx, sk, plaintext_expected)
         self.assertTrue(error <= max_error, "actual diff " + str(error))

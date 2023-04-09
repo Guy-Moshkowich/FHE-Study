@@ -94,6 +94,13 @@ class TestUtils(unittest.TestCase):
         res = modulo_polynomial(f, g)
         self.assertTrue((res.coef == [15, 11]).all())
 
+    def test_modulo_polynomial(self):
+        dim = 16
+        poly = Polynomial([0,0,0,0,0,0,0,0,1])  # poly=X**8
+        phi_m = build_cyclotomic_poly(dim)  # phi(16)=X**8+1
+        poly = modulo_polynomial(poly, phi_m)  # X**8 mod X**8+1 = -1
+        self.assertTrue((poly.coef == [-1]).all())
+
     def test_modulo_coeff(self):
         f = Polynomial([1, 2, 0, 3, 4])
         res = modulo_int(f, 2)
@@ -129,15 +136,8 @@ class TestUtils(unittest.TestCase):
         expected = [10/4, math.sqrt(2), 10/4, math.sqrt(2)/2]
         numpy.testing.assert_almost_equal(encode(U,U_conj, dim, slots), expected, 0.001)
 
-    # def test_encode_decode_encode(self):
-    #     dim = 8
-    #     U, U_conj = generate_canonical(dim)
-    #     slots = [3 + 4j, 2 - 1j]
-    #     enc_res = encode(U,U_conj, dim, slots)
-    #     dec_res = decode(U,U_conj, enc_res)
-    #     print(dec_res)
-    #     print(dec_res[:len(dec_res)//2])
-    #     numpy.testing.assert_almost_equal(encode(U,U_conj, dim, dec_res[:len(dec_res)//2]), slots, 0.001)
+
+
 
 
 
