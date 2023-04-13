@@ -136,32 +136,45 @@ class TestUtils(unittest.TestCase):
         expected = [10/4, math.sqrt(2), 10/4, math.sqrt(2)/2]
         numpy.testing.assert_almost_equal(encode(U,U_conj, dim, slots), expected, 0.001)
 
+    def test_get_units(self):
+        units = get_units(8)
+        expected = [1, 3, 5, 7]
+        self.assertTrue((units == expected))
 
+    def test_order(self):
+        self.assertEqual(1, order(16, 1))
+        self.assertEqual(4, order(16, 3))  # 3^2=9, 3^3=27=11, 3^4 =33=1
+        self.assertEqual(4, order(16, 5))  # 5^2=9, 5^3=27=11, 5^4 =1
+        self.assertEqual(2, order(16, 7))  # 7^2=49=1
+        self.assertEqual(2, order(16, 9))  # 9^2=81
+        self.assertEqual(4, order(16, 11))  # 11^2=121=9, 11^3=99=3, 11^4=33=1
+        self.assertEqual(4, order(16, 13))  # 13^2=169=9,
+        self.assertEqual(2, order(16, 15))
 
+    def test_generator(self):
+        self.assertTrue(units_cyc_gen(8) in [3, 5, 11, 13])
 
+    def test_fft(self):
+        n = 8
+        p = Polynomial([0, 1])  # p(x)=x
+        res = fft(n, p)
+        self.assertEqual(4, len(res))
+        self.assertEqual(res[0], np.conj(res[2]))
+        self.assertEqual(res[1], np.conj(res[3]))
+        self.assertEqual(res, [(0.7071067811865476+0.7071067811865475j), (-0.7071067811865474+0.7071067811865477j), (0.7071067811865476-0.7071067811865475j), (-0.7071067811865474-0.7071067811865477j)])
 
+    def test_fft_matrix(self):
+        res = fft_matrix(8)
+        self.assertEqual(4, len(res))
+        for k in range(len(res)):
+            self.assertEqual(4, len(res[k]))
+        for k in range(len(res)):
+            self.assertEqual(1, res[k][0])
+        self.assertEqual((0.7071067811865476+0.7071067811865475j), res[0][1])
+        self.assertEqual( (-0.7071067811865474+0.7071067811865477j), res[1][1])
 
-    # def test_bit_comp_with_powers_of_2_different_dimensions(self):
-    #     bgv = BGV(m_power=4, q=256, p=2, N=10)
-    #     size = 8
-    #     t = Polynomial([1, 2, 3])
-    #     sk_before = [1, t*t, t**2]
-    #     sk_after = [1, t]
-    #
-    #     plaintext1 = RingElement(Polynomial([1, 1]), bgv.m, 2)
-    #     ctx1 = bgv.encrypt(plaintext1)
-    #     ctx1_as_poly = [ctx1.c0.poly, ctx1.c1.poly]
-    #     plaintext2 = RingElement(Polynomial([1, 0]), bgv.m, 2)
-    #     ctx2 = bgv.encrypt(plaintext1)
-    #     ctx2_as_poly = [ctx2.c0.poly, ctx2.c1.poly]
-    #     ctx_multi = [ctx1_as_poly[0] * ctx2_as_poly[0],
-    #                  ctx1_as_poly[0] * ctx2_as_poly[1] + ctx1_as_poly[1]*ctx2_as_poly[0],
-    #                  ctx1_as_poly[1] * ctx2_as_poly[1]]
-    #     ctx_multi_linearized = bit_decomp(ctx_multi, size=bgv.linearization_bit_size)
-        # ctx_after =
-        # b = [Polynomial([4, 5, 6]), Polynomial([8,8,8])]
-        # result_bit_decomp = bit_decomp(a, size)
-        # result_powers_of_2 = powers_of_2(b, size)
-        # result = np.dot(result_bit_decomp, result_powers_of_2)
-        # expected = np.dot(a, b)
-        # self.assertEqual(expected, result)
+    def test_inv_ntt(self):
+        n = 8
+        p = Polynomial([0, 1])  # p(x)=x
+        res = inv_fft(n, fft(n, p))
+        numpy.testing.assert_almost_equal((p-res).coef, [0]*4, 0.001)

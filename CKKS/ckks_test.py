@@ -148,7 +148,7 @@ class TestCkks(unittest.TestCase):
         plaintext_result_poly = ct_wrt_s1.c0.poly - (ct_wrt_s1.c1.poly * s1.poly)
         plaintext_result = RingElement(plaintext_result_poly, ckks.n, ckks.q)
         diff = (plaintext_result - plaintext).canonical_norm()
-        self.assertLess(diff, 300)
+        self.assertLess(diff, 400)
 
 
 

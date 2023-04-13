@@ -85,7 +85,7 @@ class RingElement:
     def canonical_norm(self):
         return utils.canonical_norm(self.poly, self.m)
 
-    def rotate(self, k: int):
+    def automorphism(self, k: int):
         x_power_k_vec = [0]*k
         x_power_k_vec.append(1)
         x_power_k = Polynomial(x_power_k_vec)

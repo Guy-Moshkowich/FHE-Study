@@ -4,6 +4,8 @@ from cmath import exp, pi
 import math
 import random
 import cmath
+import typing
+import numpy as np
 
 def dot_prod(v1, v2):
     sum = 0
@@ -115,6 +117,8 @@ def modulo_int(poly : Polynomial, mod: int):
     return recenter_polynomial(Polynomial(mod_coeffs), mod)
 
 
+
+
 def generate_canonical(n: int):
     U = [[0] * (n//2) for i in range(n // 4)]
     U_conj = [[0] * (n//2) for i in range(n // 4)]
@@ -144,3 +148,57 @@ def encode(U, U_conj, dim, slots):
         tmp2.append((1/(dim//2))*np.inner(row, [np.conj(slot) for slot in slots]))
     result = [tmp1[i]+tmp2[i] for i in range(len(tmp1))]
     return result
+
+
+def get_units(n :int) -> typing.List[int]:
+    return [k for k in range(n) if math.gcd(k, n) == 1]
+
+
+def order(n :int, unit: int) -> int:
+    order = 1
+    x = int(unit)
+    while x != 1:
+        order += 1
+        x = x**order % n
+    return order
+
+
+def units_cyc_gen(n: int) -> int:
+    units = get_units(n)
+    for unit in units:
+        if order(n, unit) == len(units)//2:
+            return unit
+
+
+def fft_matrix(n) -> typing.List[typing.List]:
+    g = units_cyc_gen(n)
+    primitive = exp(2j * pi / n)
+    cyc_powers = [g ** i % n for i in range(n // 4)]
+    cyc_roots = []
+    for k in cyc_powers:
+        cyc_roots.append(primitive ** k)
+    roots = list(cyc_roots)
+    for r in cyc_roots:
+        roots.append(np.conj(r))
+    mat = []
+    for root in roots:
+        row = [root**k for k in range(0, n//2)]
+        mat.append(row)
+    return mat
+
+
+def fft(n: int, p: Polynomial) -> typing.List[complex]:
+    mat = np.array(fft_matrix(n))
+    coef = list(p.coef)
+    coef.extend([0 for i in range(n//2-len(coef))]) # padding with 0
+    return list(mat.dot(np.array(coef)))
+
+def inv_fft(n: int, a: typing.List[complex]) -> Polynomial:
+    mat = np.array(fft_matrix(n))
+    inv_mat = np.linalg.inv(mat)
+    coef = inv_mat.dot(np.array(a))
+    return Polynomial(coef)
+
+# def NTT(p:Polynomial, q:int)->typing.List[int]:
+#
+#     return []

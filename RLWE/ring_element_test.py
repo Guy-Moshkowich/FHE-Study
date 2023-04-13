@@ -76,7 +76,7 @@ class TestRingElement(unittest.TestCase):
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
 
-    def test_rotate(self):
+    def test_automorphism(self):
         dim = 16
         h = 4
         q = 1000
@@ -86,14 +86,14 @@ class TestRingElement(unittest.TestCase):
         tmp1 = list(sk.poly.coef)
         tmp1.extend([0 for i in range(len(tmp1), dim//2)])
         slots = utils.decode(U, U_conj, tmp1)
-        sk_new = sk.rotate(5)
+        sk_new = sk.automorphism(5)
         tmp2 = list(sk_new.poly.coef)
         tmp2.extend([0 for i in range(len(tmp2), dim//2)])
         slots_new = utils.decode(U, U_conj, tmp2)
         for slot in slots:
             found = False
             for slot_new in slots_new:
-                if np.abs(slot - slot_new)>0.0001:
+                if np.abs(slot - slot_new) > 0.0001:
                     found = True
                     break
             self.assertTrue(found)
