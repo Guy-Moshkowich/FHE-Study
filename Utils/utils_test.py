@@ -106,22 +106,6 @@ class TestUtils(unittest.TestCase):
         res = modulo_int(f, 2)
         self.assertTrue((res.coef == [1, 0, 0, 1, 0]).all())
 
-    # def test_generate_fft_matrix(self):
-    #     fft_rep, inv_fft_rep = generate_fft(8)
-    #     numpy.testing.assert_almost_equal(fft_rep[0][0], 1, 0.0001)
-    #     numpy.testing.assert_almost_equal(fft_rep[1][0], 1, 0.0001)
-    #     numpy.testing.assert_almost_equal(fft_rep[2][0], 1, 0.0001)
-    #     numpy.testing.assert_almost_equal(fft_rep[3][0], 1, 0.0001)
-        #
-        # numpy.testing.assert_almost_equal(fft_rep[0][1], 0.707 - 0.707j, 0.0001)
-        # numpy.testing.assert_almost_equal(fft_rep[1][1], -0.707 - 0.707j, 0.0001)
-        # numpy.testing.assert_almost_equal(fft_rep[2][1], -0.707 + 0.707j, 0.0001)
-        # numpy.testing.assert_almost_equal(fft_rep[3][1], 0.707 + 0.707j, 0.0001)
-        #
-        # numpy.testing.assert_almost_equal(inv_fft_rep[0][0], 1, 0.0001)
-        # numpy.testing.assert_almost_equal(inv_fft_rep[1][0], 1, 0.0001)
-        # numpy.testing.assert_almost_equal(inv_fft_rep[2][0], 1, 0.0001)
-        # numpy.testing.assert_almost_equal(inv_fft_rep[3][0], 1, 0.0001)
 
     def test_decode(self):
         U,U_conj = generate_canonical(8)
@@ -134,12 +118,13 @@ class TestUtils(unittest.TestCase):
         U, U_conj = generate_canonical(dim)
         slots = [3+4j, 2-1j]
         expected = [10/4, math.sqrt(2), 10/4, math.sqrt(2)/2]
-        numpy.testing.assert_almost_equal(encode(U,U_conj, dim, slots), expected, 0.001)
+        actual = encode(U,U_conj, dim, slots)
+        numpy.testing.assert_almost_equal(expected, actual, 0.001)
 
     def test_get_units(self):
-        units = get_units(8)
+        actual = get_units(8)
         expected = [1, 3, 5, 7]
-        self.assertTrue((units == expected))
+        self.assertEqual(expected, actual)
 
     def test_order(self):
         self.assertEqual(1, order(16, 1))
@@ -163,6 +148,28 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(res[1], np.conj(res[3]))
         self.assertEqual(res, [(0.7071067811865476+0.7071067811865475j), (-0.7071067811865474+0.7071067811865477j), (0.7071067811865476-0.7071067811865475j), (-0.7071067811865474-0.7071067811865477j)])
 
+    def test_fft_multiplication(self):
+        n = 8
+        a = Polynomial([0, 1])  # a(x)=x
+        b = Polynomial([0, 0, 1]) # b(x)=x^2
+        c = a*b  # c(x)=x^3 ==> [0,0,0,1]
+        a_fft = fft(n, a)
+        b_fft = fft(n, b)
+        expected = fft(n, c)
+        actual = [a_fft[i]*b_fft[i]  for i in range(n//2)]
+        self.assertEqual(actual, expected)
+
+    def test_fft_multiplication_negacyclic(self):
+        n = 8
+        a = Polynomial([1, 1])  # a(x)=x+1
+        b = Polynomial([1, 0, 0, 1]) # b(x)=x^3+1
+        c = Polynomial([0,1,0,1])  # c(x)=x^4+x^3+x+1=x^3+x ==> [0,1,0,1]
+        a_fft = fft(n, a)
+        b_fft = fft(n, b)
+        expected = fft(n, c)
+        actual = [a_fft[i]*b_fft[i]  for i in range(n//2)]
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
     def test_fft_matrix(self):
         res = fft_matrix(8)
         self.assertEqual(4, len(res))
@@ -173,8 +180,126 @@ class TestUtils(unittest.TestCase):
         self.assertEqual((0.7071067811865476+0.7071067811865475j), res[0][1])
         self.assertEqual( (-0.7071067811865474+0.7071067811865477j), res[1][1])
 
-    def test_inv_ntt(self):
+    def test_fft_and_inv_ftt(self):
         n = 8
         p = Polynomial([0, 1])  # p(x)=x
         res = inv_fft(n, fft(n, p))
         numpy.testing.assert_almost_equal((p-res).coef, [0]*4, 0.001)
+
+    def test_is_power_2(self):
+        self.assertTrue(is_power_2(8))
+        self.assertFalse(is_power_2(7))
+
+    def test_generate_primitive_root_of_unity(self):
+        n = 4
+        p = 13
+        x = generate_primitive_root_of_unity(n, p)
+        for k in range (1, n):
+            self.assertNotEqual(1, (x ** k) % p, "x="+str(x)+", k="+str(k))
+        self.assertEqual(1, (x**n) % p)
+
+    def test_ntt_multiplication(self):
+        # precondition: p mod 2n =1, 17 mod 8 =1
+        n = 4
+        p = 17
+        a = [1,1,0,0] # x+1
+        b = [0,1,0,0] # x
+        expected = ntt(n, p, [0, 1, 1, 0]) # x*(x+1)=x^2+x => [0,1,1,0]
+        ntt_a = ntt(n, p, a)
+        ntt_b = ntt(n, p, b)
+        actual = [ntt_a[i]*ntt_b[i] % p for i in range(len(a))]
+        self.assertEqual(expected, actual)
+
+    def test_ntt_multiplication_negacyclic(self):
+        n = 4 # phi(x)=x^4+1
+        p = 17
+        a = [1,1,0,0] # x+1
+        b = [1,0,0,1] # x^3+1
+        expected = ntt(n, p, [0, 1, 0, 1]) # (x+1)(x^3+1)=x^4+x^3+x+1=x^3+x
+        ntt_a = ntt(n, p, a)
+        ntt_b = ntt(n, p, b)
+        actual = [ntt_a[i]*ntt_b[i] % p for i in range(len(a))]
+        self.assertEqual(expected, actual)
+
+    def test_ntt_mul_inv_ntt_is_identity(self):
+        n = 4
+        p = 17
+        inv_ntt = inv_ntt_matrix(n, p)
+        ntt = ntt_matrix(n, p)
+        actual = (np.array(inv_ntt).dot(np.array(ntt)))
+        for i in range(len(actual)):
+            r = actual[i]
+            for j in range(len(r)):
+                if j==i:
+                    self.assertEqual(1, r[j]%p)
+                else:
+                    self.assertEqual(0, r[j]%p)
+
+
+    def test_ntt_and_inv_ntt(self):
+        n = 4
+        p = 17
+        a = [1, 0, 0, 0]
+        ntt_a = ntt(n, p, a)
+        print('ntt_a: ', ntt_a)
+        actual = inv_ntt(n, p, ntt_a)
+        print('inv_ntt: ', actual)
+        expected = a
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
+    def test_ntt_and_inv_ntt_centering_modulo(self):
+        n = 4
+        p = 73
+        a = [14.0, 3.0, 0.0, -3.0]
+        ntt_a = ntt(n, p, a)
+        print('ntt_a: ', ntt_a)
+        actual = inv_ntt(n, p, ntt_a)
+        print('inv_ntt: ', actual)
+        expected = a
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
+    def test_special_fft_matrix(self):
+        actual = special_fft_matrix(n=4)
+        expected = [[(1+0j), (0.7+0.7j), (0+1j), (-0.7+0.7j)], [(1+0j), (-0.7+0.7j), (0-1j), (0.7+0.7j)], [(1+0j), (-0.7-0.7j), (0+1j), (0.7-0.7j)], [(1+0j), (0.7-0.7j), (0-1j), (-0.7-0.7j)]]
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
+
+    def test_special_fft_multiplication(self):
+        n = 4
+        a = Polynomial([0, 1])  # a(x)=x
+        b = Polynomial([0, 0, 1]) # b(x)=x^2
+        c = a*b  # c(x)=x^3 ==> [0,0,0,1]
+        a_sfft = special_fft(n, a)
+        b_sfft = special_fft(n, b)
+        expected = special_fft(n, c)
+        actual = [a_sfft[i]*b_sfft[i]  for i in range(n)]
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
+    def test_special_fft_multiplication_negacyclic(self):
+        n = 4
+        a = Polynomial([1, 1])  # a(x)=x+1
+        b = Polynomial([1, 0, 0, 1]) # b(x)=x^3+1
+        c = Polynomial([0,1,0,1])  # c(x)=x^4+x^3+x+1=x^3+x ==> [0,1,0,1]
+        a_sfft = special_fft(n, a)
+        b_sfft = special_fft(n, b)
+        expected = special_fft(n, c)
+        actual = [a_sfft[i]*b_sfft[i]  for i in range(n)]
+        np.testing.assert_almost_equal(expected, actual, 0.0001)
+
+    def test_special_fft_and_inv_special_ftt(self):
+        n = 4
+        poly = Polynomial([0, 1, 0, 0])  # p(x)=x
+        actual = inv_special_fft(n, special_fft(n, poly))
+        numpy.testing.assert_almost_equal(actual.coef, poly.coef, 0.001)
+
+    def test_special_inv_fft_real_poly(self):
+        n = 4
+        actual = inv_special_fft(n, [1,2,2,1])
+        for c in actual.coef:
+            if math.fabs(c.imag) > 0.000001:
+                self.fail('c.imag=', c.imag)
+
+    def test_inv(self):
+        actual = inv(x=4, p=17)
+        expected = 13
+        self.assertEqual(expected, actual)

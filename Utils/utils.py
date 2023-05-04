@@ -1,5 +1,4 @@
 from numpy.polynomial import Polynomial
-import numpy as np
 from cmath import exp, pi
 import math
 import random
@@ -170,6 +169,10 @@ def units_cyc_gen(n: int) -> int:
             return unit
 
 
+# def get_primitive_complex_root(n):
+#     g = units_cyc_gen(n)
+#     return = exp(2j * pi / n)
+
 def fft_matrix(n) -> typing.List[typing.List]:
     g = units_cyc_gen(n)
     primitive = exp(2j * pi / n)
@@ -193,12 +196,112 @@ def fft(n: int, p: Polynomial) -> typing.List[complex]:
     coef.extend([0 for i in range(n//2-len(coef))]) # padding with 0
     return list(mat.dot(np.array(coef)))
 
+
 def inv_fft(n: int, a: typing.List[complex]) -> Polynomial:
     mat = np.array(fft_matrix(n))
     inv_mat = np.linalg.inv(mat)
     coef = inv_mat.dot(np.array(a))
     return Polynomial(coef)
 
-# def NTT(p:Polynomial, q:int)->typing.List[int]:
+
+def generate_primitive_root_of_unity(n: int, p: int)-> int:
+    assert n < p
+    assert p % n == 1 # n|p-1 <=> p-1=0 mod n <=> p=1 mod n
+    assert is_power_2(n)
+    for x in range (2, p-1):
+        if ((x ** n) % p == 1) and ((x ** (n - 1)) % p != 1):
+            return x
+    assert 1 == 0 # we should not get here.
+
+def is_power_2(n):
+    return (n != 0) and ((n & (n - 1)) == 0)
+
 #
-#     return []
+# def special_vandermonde(n:int, roots):
+#     mat = []
+#     for i in range(0, n):
+#         row = []
+#         for k in range(0, n):
+#             row.append((x**i) ** k)
+#         mat.append(row)
+#     return mat
+
+
+def special_fft_matrix(n: int):
+    x = cmath.exp((2j * pi) / (2*n))
+    roots = [x**i for i in get_units(2*n)]
+    mat = []
+    for root in roots:
+        row = [(root ** k) for k in range(0, n)]
+        mat.append(row)
+    return mat
+
+
+def special_fft(n: int, p: Polynomial) -> typing.List[complex]:
+    mat = np.array(special_fft_matrix(n))
+    coef = list(p.coef)
+    coef.extend([0 for i in range(n-len(coef))]) # padding with 0
+    return list(mat.dot(np.array(coef)))
+
+
+def inv_special_fft_matrix(n: int):
+    mat = np.array(special_fft_matrix(n))
+    return np.linalg.inv(mat)
+
+def inv_special_fft(n: int, a: typing.List[complex]) -> Polynomial:
+    mat = np.array(special_fft_matrix(n))
+    inv_mat = np.linalg.inv(mat)
+    coef = inv_mat.dot(np.array(a))
+    return Polynomial(coef)
+
+
+def ntt_matrix(n: int, p: int):
+    x = generate_primitive_root_of_unity(2*n, p)
+    roots = [x**i for i in get_units(2*n)]
+    mat = []
+    for root in roots:
+        row = [(root ** k) % p for k in range(0, n)]
+        mat.append(row)
+    return mat
+
+
+def ntt(n: int, p:int, a: typing.List[int])->typing.List[int]:
+    mat = np.array(ntt_matrix(n, p))
+    # a.extend([0 for i in range(n // 2 - len(a))])  # padding with 0
+    vec = np.array(a)
+    mat_mul = mat.dot(vec)
+    return [(mat_mul[i] % p) for i in range(len(mat_mul))]
+
+
+def inv_ntt(n: int, p:int, a: typing.List[int])->typing.List[int]:
+    mat = np.array(inv_ntt_matrix(n, p))
+    vec = np.array(a)
+    vec_res = mat.dot(vec)
+    res = [0]*len(vec_res)
+    for i in range(len(vec_res)):
+        res[i] = (vec_res[i] % p)
+        if res[i] > p//2:
+            res[i] = res[i]-p
+    return res
+
+
+def inv(x: int, p: int)->int:
+    if x == 1:
+        return x
+    for g in range(2, p):
+        if g * x % p == 1:
+            break
+    assert g * x % p == 1, 'g='+str(g)+', x='+str(x)
+    return g
+
+
+def inv_ntt_matrix(n: int, p: int):
+    two_n_inv = inv(n, p)
+    x = generate_primitive_root_of_unity(2 * n, p)
+    inv_gen = inv(x, p)
+    roots = [inv_gen**i % p for i in get_units(2 * n)]
+    mat = []
+    for k in range(0,n):
+        row = [(two_n_inv * (root ** k)) % p for root in roots]
+        mat.append(row)
+    return mat
