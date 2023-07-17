@@ -76,6 +76,24 @@ class TestRingElement(unittest.TestCase):
         r = RingElement.small_gauss(m, mod)
         self.assertTrue(r.canonical_norm() <= 20, "error is to big: error=" + str(r.canonical_norm()))
 
+    def test_automorphism_constant_fixed(self):
+        dim = 32
+        q=1009
+        p = [1]
+        el = RingElement(Polynomial(p), dim, q)
+        el_new = el.automorphism(5**3)
+        self.assertEqual(1, el_new.poly.coef)
+        self.assertEqual(1, el_new.poly.coef[0])
+
+    def test_automorphism2(self):
+        dim = 32
+        q = 1009
+        p = [0,1] # p(x)=x
+        el = RingElement(Polynomial(p), dim, q)
+        el_new = el.automorphism(5**1)
+        expected = [0, 0, 0, 0, 0, 1] #auto(p)=X^5
+        np.testing.assert_array_equal(expected, el_new.poly.coef)
+
     def test_automorphism(self):
         dim = 16
         h = 4
@@ -97,42 +115,3 @@ class TestRingElement(unittest.TestCase):
                     found = True
                     break
             self.assertTrue(found)
-
-
-
-
-
-
-    # def test_ae_size_for_binary_a(self):
-    #     n = 1024
-    #     q = 1000
-    #     a = RingElement.random_binary(n, q)
-    #     a_div_2 = Polynomial([c/4 for c in a.poly.coef])
-    #     e = RingElement.small_gauss(n, q)
-    #     a_div_2_times_e = RingElement(utils.round(a_div_2 * e.poly), n, q)
-    #     self.assertTrue((a_div_2_times_e).canonical_norm() < 50)
-
-    # def test_ae_size_for_non_binary_a(self):
-    #     n = 1024
-    #     q = 100
-    #     a = RingElement.random(n, q)
-    #     e = RingElement.small_gauss(n, q)
-    #     a_bit_decomp_list = utils.bit_decomp_poly(a.poly, q)
-    #     ae = RingElement.const(0, n, q)
-    #     for a_binary in a_bit_decomp_list:
-    #         print('a_binary: ', a_binary)
-    #         a_binary_div_2 = Polynomial([c/2 for c in a_binary.coef])
-    #         a_binary_div_2_times_e = RingElement(utils.round(a_binary_div_2 * e.poly), n, q)
-    #         print('a_binary_div_2_times_e_norm():', a_binary_div_2_times_e.canonical_norm())
-    #
-    #         ae += a_binary_div_2_times_e
-    #     print('(ae).canonical_norm():', (ae).canonical_norm())
-    #     self.assertTrue((ae).canonical_norm() < 50)
-
-
-    # def test_norm_canonical_binary_a(self):
-    #     a = RingElement.random_binary(m=2**10, mod=100)
-    #     e = RingElement.small_gauss(m=2**10, mod=100)
-    #     print("e.canonical_norm(): ", e.canonical_norm());
-    #     print("a.canonical_norm(): ", a.canonical_norm());
-    #     print("ae.canonical_norm(): ", (a*e).canonical_norm());

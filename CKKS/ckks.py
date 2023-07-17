@@ -78,7 +78,7 @@ class Ciphertext:
         self.c0 = c0
         self.c1 = c1
         self.q = self.c0.mod
-        self.n = self.c0.m
+        self.n = self.c0.dim
 
     def __add__(self, other):
         return Ciphertext(self.c0 + other.c0, self.c1 + other.c1)

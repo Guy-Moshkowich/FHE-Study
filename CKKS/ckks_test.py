@@ -1,7 +1,6 @@
 import unittest
 from ckks import CKKS
 from RLWE.ring_element import RingElement
-import math
 from numpy.polynomial import Polynomial
 from Utils import utils
 
@@ -158,5 +157,5 @@ class TestCkks(unittest.TestCase):
         self.assertTrue(error <= max_error, "actual diff " + str(error))
 
     def assert_almost_equal(self, elm1: RingElement, elm2: RingElement, eps):
-        diff = RingElement(elm1.poly - elm2.poly, elm1.m, elm1.mod).canonical_norm()
+        diff = RingElement(elm1.poly - elm2.poly, elm1.dim, elm1.mod).canonical_norm()
         self.assertLess(diff, eps, "error: "+str(diff))

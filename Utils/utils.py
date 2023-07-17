@@ -116,14 +116,12 @@ def modulo_int(poly : Polynomial, mod: int):
     return recenter_polynomial(Polynomial(mod_coeffs), mod)
 
 
-
-
-def generate_canonical(n: int):
-    U = [[0] * (n//2) for i in range(n // 4)]
-    U_conj = [[0] * (n//2) for i in range(n // 4)]
-    for k in range(n // 4):
-        root_k = cmath.exp((2 * cmath.pi * 1j * (2 * k + 1)) / n)
-        for t in range(n//2):
+def generate_canonical(dim: int):
+    U = [[0] * (dim // 2) for i in range(dim // 4)]
+    U_conj = [[0] * (dim // 2) for i in range(dim // 4)]
+    for k in range(dim // 4):
+        root_k = cmath.exp((2 * cmath.pi * 1j * (2 * k + 1)) / dim)
+        for t in range(dim // 2):
             U[k][t] = root_k ** t
             U_conj[k][t] = np.conj(U[k][t])
     return U, U_conj
@@ -147,6 +145,40 @@ def encode(U, U_conj, dim, slots):
         tmp2.append((1/(dim//2))*np.inner(row, [np.conj(slot) for slot in slots]))
     result = [tmp1[i]+tmp2[i] for i in range(len(tmp1))]
     return result
+
+def generate_canonical_power_of_five(dim: int):
+    U = [[0] * (dim // 2) for _ in range(dim // 4)]
+    U_conj = [[0] * (dim // 2) for _ in range(dim // 4)]
+    zeta = cmath.exp((2 * cmath.pi * 1j) / dim)
+    for k in range(dim // 4):
+        root_k = zeta**((5**k))
+        for t in range(dim // 2):
+            U[k][t] = root_k ** t
+            U_conj[k][t] = np.conj(U[k][t])
+    return U, U_conj
+
+
+def generate_canonical_power_of_five_cosets(dim: int, k: int):
+    U = [[0] * (dim // 2) for _ in range(dim // 4)]
+    U_conj = [[0] * (dim // 2) for _ in range(dim // 4)]
+    zeta = cmath.exp((2 * cmath.pi * 1j) / dim)
+    five_powers_order = dim // 4  # size of max rotation
+    # k = 2 # size of sub rotation
+    roots = []
+    # generate roots with special powers
+    for j in range(0, five_powers_order // k):
+        for i in range(0, k):
+            coset_representative = zeta ** (5 ** j)
+            zeta_coset = coset_representative**(5**((five_powers_order / k) * i))
+            roots.append(zeta_coset)
+    assert len(roots) == dim // 4
+    for l in range(dim // 4):
+        for t in range(dim // 2):
+            U[l][t] = roots[l] ** t
+            U_conj[l][t] = np.conj(U[l][t])
+    return U, U_conj
+
+
 
 
 def get_units(n :int) -> typing.List[int]:
@@ -305,3 +337,34 @@ def inv_ntt_matrix(n: int, p: int):
         row = [(two_n_inv * (root ** k)) % p for root in roots]
         mat.append(row)
     return mat
+
+
+def bit_reverse(num, num_bits: int):
+    reversed_num = 0
+
+    for _ in range(num_bits):
+        reversed_num <<= 1
+        reversed_num |= num & 1
+        num >>= 1
+
+    return reversed_num
+
+
+# def inplaceNegacyclicNTT( N:int, vals: typing.List[complex]):
+#     t = N #N
+#     n = int(math.log(N))
+#     logt = n+1
+#     m=1
+#     root2N = 2j * pi / 2*N
+#     while m < N:
+#         t = int(t >> 1)
+#         logt = logt-1
+#         for i in range(0, m):
+#             j1 = i * (2**logt)
+#             j2 = j1+t-1
+#             W = root2N**bit_reverse(m+i, n)
+#             for j in range(j1, j2+1):
+#                 tmp = W*vals[j+t]
+#                 vals[j+t] = vals[j]-tmp
+#                 vals[j]=vals[j]-tmp
+#         m = m << 1

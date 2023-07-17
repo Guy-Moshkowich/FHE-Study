@@ -10,34 +10,34 @@ class RingElement:
 
     def __init__(self, poly: Polynomial, m: int, mod: int):
         self.mod = mod
-        self.m = m
-        self.phi_m = utils.build_cyclotomic_poly(self.m)
+        self.dim = m
+        self.phi_m = utils.build_cyclotomic_poly(self.dim)
         self.poly = self.modulo(poly, self.mod, self.phi_m)
-        RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.m)
+        RingElement.primitive_roots = utils.get_nth_primitive_roots_of_unity(self.dim)
 
 
     def __add__(self, other):
         assert self.mod == other.mod
-        assert self.m == other.m
-        return RingElement(self.poly + other.poly, self.m, self.mod)
+        assert self.dim == other.dim
+        return RingElement(self.poly + other.poly, self.dim, self.mod)
 
     def __sub__(self, other):
         assert self.mod == other.mod
-        assert self.m == other.m
-        return RingElement(self.poly - other.poly, self.m, self.mod)
+        assert self.dim == other.dim
+        return RingElement(self.poly - other.poly, self.dim, self.mod)
 
     def __mul__(self, other):
         assert self.mod == other.mod
-        assert self.m == other.m
-        return RingElement(self.poly * other.poly, self.m, self.mod)
+        assert self.dim == other.dim
+        return RingElement(self.poly * other.poly, self.dim, self.mod)
 
     def __eq__(self, other):
         assert self.mod == other.mod
-        assert self.m == other.m
+        assert self.dim == other.dim
         return all(v == 0 for v in (self.poly-other.poly).coef)
 
     def __str__(self):
-        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.m) + ', modulo: ' + str(
+        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.dim) + ', modulo: ' + str(
             self.mod)
 
     @classmethod
@@ -69,7 +69,7 @@ class RingElement:
         return cls(small_poly, m, mod)
 
     def change_modulo(self, new_modulo):
-        return RingElement(self.poly, self.m, new_modulo)
+        return RingElement(self.poly, self.dim, new_modulo)
 
     def modulo(self, poly: Polynomial, mod: int, phi_m: Polynomial):
         poly_modulo_phi_m = utils.modulo_polynomial(poly, phi_m)
@@ -80,12 +80,13 @@ class RingElement:
     def compose(self, g: Polynomial):  # compute composition of self.poly and g mod (X^{m//2}+1, mod)
         g_poly1d = np.poly1d(g.coef[::-1])
         compose_poly1d = np.poly1d(self.poly.coef[::-1])(g_poly1d)
-        return RingElement(Polynomial(compose_poly1d.coefficients[::-1]), self.m, self.mod)
+        return RingElement(Polynomial(compose_poly1d.coefficients[::-1]), self.dim, self.mod)
 
     def canonical_norm(self):
-        return utils.canonical_norm(self.poly, self.m)
+        return utils.canonical_norm(self.poly, self.dim)
 
     def automorphism(self, k: int):
+        #k_mod = k % (self.dim // 2)
         x_power_k_vec = [0]*k
         x_power_k_vec.append(1)
         x_power_k = Polynomial(x_power_k_vec)

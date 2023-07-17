@@ -221,7 +221,7 @@ class TestUtils(unittest.TestCase):
         actual = [ntt_a[i]*ntt_b[i] % p for i in range(len(a))]
         self.assertEqual(expected, actual)
 
-    def test_ntt_mul_inv_ntt_is_identity(self):
+    def test_ntt_mat_mul_inv_ntt_mat_is_identity_mat(self):
         n = 4
         p = 17
         inv_ntt = inv_ntt_matrix(n, p)
@@ -303,3 +303,20 @@ class TestUtils(unittest.TestCase):
         actual = inv(x=4, p=17)
         expected = 13
         self.assertEqual(expected, actual)
+
+    def test_bit_reverse(self):
+        self.assertEqual(bit_reverse(0, 1), 0)  # 0 should remain unchanged (1 bit)
+        self.assertEqual(bit_reverse(1, 1), 1)  # 1 should remain unchanged (1 bit)
+        self.assertEqual(bit_reverse(10, 4), 5)  # Binary: 0000 1010 -> 0000 0101 (4 bits)
+        self.assertEqual(bit_reverse(255, 8), 255)  # Binary: 1111 1111 -> 1111 1111 (8 bits)
+        self.assertEqual(bit_reverse(65535, 16), 65535)  # Binary: 1111 1111 1111 1111 -> 1111 1111 1111 1111 (16 bits)
+
+    # def test_inplace(self):
+    #     n = 4
+    #     a = Polynomial([1, 1, 0, 0])  # a(x)=x+1
+    #     b = Polynomial([1, 0, 0, 1])  # b(x)=x^3+1
+    #     c = Polynomial([0, 1, 0, 1])  # c(x)=x^4+x^3+x+1=x^3+x ==> [0,1,0,1]
+    #     expected = special_fft(n, a)
+    #     inplaceNegacyclicNTT(n, [0,0,1,1])
+    #     actual = a.coef #inplace
+    #     np.testing.assert_almost_equal(actual, expected, 0.0001)
