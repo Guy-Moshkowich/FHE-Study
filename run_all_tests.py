@@ -10,7 +10,8 @@ testmodules = [
     'ring_element_test',
     'bgv_test',
     'utils_test',
-    'ckks_test'
+    'ckks_test',
+    'sub_rotation_test'
     ]
 
 

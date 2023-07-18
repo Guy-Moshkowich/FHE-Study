@@ -2,6 +2,7 @@ import unittest
 from utils import *
 import numpy
 import cmath
+from RLWE.ring_element import RingElement
 
 class TestUtils(unittest.TestCase):
 
@@ -241,9 +242,7 @@ class TestUtils(unittest.TestCase):
         p = 17
         a = [1, 0, 0, 0]
         ntt_a = ntt(n, p, a)
-        print('ntt_a: ', ntt_a)
         actual = inv_ntt(n, p, ntt_a)
-        print('inv_ntt: ', actual)
         expected = a
         np.testing.assert_almost_equal(expected, actual, 0.0001)
 
@@ -252,9 +251,7 @@ class TestUtils(unittest.TestCase):
         p = 73
         a = [14.0, 3.0, 0.0, -3.0]
         ntt_a = ntt(n, p, a)
-        print('ntt_a: ', ntt_a)
         actual = inv_ntt(n, p, ntt_a)
-        print('inv_ntt: ', actual)
         expected = a
         np.testing.assert_almost_equal(expected, actual, 0.0001)
 
@@ -311,12 +308,21 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(bit_reverse(255, 8), 255)  # Binary: 1111 1111 -> 1111 1111 (8 bits)
         self.assertEqual(bit_reverse(65535, 16), 65535)  # Binary: 1111 1111 1111 1111 -> 1111 1111 1111 1111 (16 bits)
 
-    # def test_inplace(self):
-    #     n = 4
-    #     a = Polynomial([1, 1, 0, 0])  # a(x)=x+1
-    #     b = Polynomial([1, 0, 0, 1])  # b(x)=x^3+1
-    #     c = Polynomial([0, 1, 0, 1])  # c(x)=x^4+x^3+x+1=x^3+x ==> [0,1,0,1]
-    #     expected = special_fft(n, a)
-    #     inplaceNegacyclicNTT(n, [0,0,1,1])
-    #     actual = a.coef #inplace
-    #     np.testing.assert_almost_equal(actual, expected, 0.0001)
+    def test_automorphism(self):
+        ####### test that m(\zeta^k)=m'(\zeta) for m'(X)=m(X^k).
+        n = 16
+        scale = 2 ** 9
+        q = 10000019
+        zeta = cmath.exp((2j * pi) / (2 * n))
+        U, U_conj = generate_canonical_power_of_five(2 * n)
+        b = [random.randint(1, 100) for _ in range(8)]
+        a = encode(U, U_conj, 2 * n, b)
+        a_r = [int(x.real * scale) for x in a]
+        a_elm = RingElement(Polynomial(a_r), 2 * n, q)
+        k = 2
+        power = (5 ** k)
+        eval_a_zeta_power_five = np.polyval(a_elm.poly.coef[::-1], zeta ** power)
+        a_k = a_elm.automorphism(power)
+        eval_a_k_zeta = np.polyval(a_k.poly.coef[::-1], zeta)
+        self.assertTrue(abs(eval_a_zeta_power_five - eval_a_k_zeta) < 0.001)
+
