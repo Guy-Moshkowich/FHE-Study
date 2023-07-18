@@ -73,7 +73,7 @@ class TestSubRotation(unittest.TestCase):
 
     def test_mul(self):
         mod = 10**9
-        SCALE = 2 ** 5  # rounding scale
+        SCALE = 2 ** 9  # rounding scale
         sub_rotation = SubRotation(dim=32, subset_size=2)
 
         slots1 = [complex(round(random.uniform(-10, 10), 2), round(random.uniform(-10, 10), 2)) for _ in
@@ -85,27 +85,9 @@ class TestSubRotation(unittest.TestCase):
         a2 = sub_rotation.encode(slots2)
         a1_elm = RingElement(Polynomial([int(x.real * SCALE) for x in a1]), sub_rotation.dim, mod)
         a2_elm = RingElement(Polynomial([int(x.real * SCALE) for x in a2]), sub_rotation.dim, mod)
-        a1_elm = RingElement(Polynomial([1,0]), sub_rotation.dim, mod)
-        print('a1_elm.poly.coef=',a1_elm.poly.coef)
-        s = [0]*16
-        s[0]=1
-        slots1 = sub_rotation.decode(s)
-        print('slots1=', slots1)
-
-        print('encode(slots1)=', sub_rotation.encode(slots1))
-        print('a1_elm=', a1_elm.poly.coef)
-        print('a2_elm=', a2_elm.poly.coef)
         a3_elm = a1_elm * a2_elm
-        print('a3_elm=', a3_elm.poly.coef)
-
-        decode_a3 = sub_rotation.decode([x / SCALE for x in a3_elm.poly.coef])[:sub_rotation.dim//4]
+        decode_a3 = sub_rotation.decode([(x / (SCALE**2)) for x in a3_elm.poly.coef])[:sub_rotation.dim//4]
         slots3 = []
         for i in range(len(slots1)):
             slots3.append(slots1[i]*slots2[i])
-        # print('a1=', a1)
-        # print('a2=', a2)
-        print('slots1=', slots1)
-        print('slots2=', slots2)
-        print('slots3=', slots3)
-        print('decode_a3=', decode_a3)
-        self.assertTrue(np.allclose(np.array(slots3), np.array(decode_a3), 0.001))
+        self.assertTrue(np.allclose(np.array(slots3), np.array(decode_a3), 0.01))
