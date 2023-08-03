@@ -5,13 +5,15 @@ sys.path.append(os.path.abspath("RLWE/"))
 sys.path.append(os.path.abspath("Utils/"))
 sys.path.append(os.path.abspath("BGV/"))
 sys.path.append(os.path.abspath("CKKS/"))
+sys.path.append(os.path.abspath("LWE/"))
 
 testmodules = [
     'ring_element_test',
     'bgv_test',
     'utils_test',
     'ckks_test',
-    'sub_rotation_test'
+    'sub_rotation_test',
+    'lwe_test'
     ]
 
 
