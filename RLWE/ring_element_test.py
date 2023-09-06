@@ -121,6 +121,8 @@ class TestRingElement(unittest.TestCase):
         # "EFFICIENT SECURE MATRIX MULTIPLICATION
         # OVER LWE-BASED HOMOMORPHIC ENCRYPTION",  section 3.2
         # https://sciendo.com/downloadpdf/journals/tmmp/67/1/article-p69.xml
+        # Here we multiply the matrix [[1,2,3],[4,5,6],[7,8,9]]
+        # with the vector [1,1,1]
         dim = 16*2
         q = 10
         m1 = Polynomial([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
