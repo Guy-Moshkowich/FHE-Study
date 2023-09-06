@@ -115,3 +115,23 @@ class TestRingElement(unittest.TestCase):
                     found = True
                     break
             self.assertTrue(found)
+
+    def test_matrix_vector_multi_by_poly_encoding(self):
+        # based on paper
+        # "EFFICIENT SECURE MATRIX MULTIPLICATION
+        # OVER LWE-BASED HOMOMORPHIC ENCRYPTION",  section 3.2
+        # https://sciendo.com/downloadpdf/journals/tmmp/67/1/article-p69.xml
+        dim = 16*2
+        q = 10
+        m1 = Polynomial([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        v1_arr = [0] * (dim // 2)
+        v1_arr[-1] = 1
+        v1_arr[-2] = 1
+        v1_arr[-3] = 1
+        v1 = (-1) * Polynomial(v1_arr)
+        m = RingElement(m1, dim, q)
+        v = RingElement(v1, dim, q)
+        res = m*v
+        self.assertEqual(res.poly.coef[0] % q, (1+2+3) % q)
+        self.assertEqual(res.poly.coef[3] % q, (4+5+6) % q)
+        self.assertEqual(res.poly.coef[6] % q, (7+8+9) % q)
