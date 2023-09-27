@@ -14,20 +14,22 @@ def mat_sum(A, B):
 
 def mat_mul(A, B):
     n = len(A[0])
-    A_1_1 = [A[i][0:n // 2] for i in range(n // 2)]
-    A_1_2 = [A[i][n // 2:n] for i in range(n // 2)]
-    A_2_1 = [A[i][0:n // 2] for i in range(n // 2, n)]
-    A_2_2 = [A[i][n // 2:n] for i in range(n // 2, n)]
+    if n == 1:
+        return [[A[0][0]*B[0][0]]]
+    else:
+        A_1_1 = [A[i][0:n // 2] for i in range(n // 2)]
+        A_1_2 = [A[i][n // 2:n] for i in range(n // 2)]
+        A_2_1 = [A[i][0:n // 2] for i in range(n // 2, n)]
+        A_2_2 = [A[i][n // 2:n] for i in range(n // 2, n)]
 
-    B_1_1 = [B[i][0:n // 2] for i in range(n // 2)]
-    B_1_2 = [B[i][n // 2:n] for i in range(n // 2)]
-    B_2_1 = [B[i][0:n // 2] for i in range(n // 2, n)]
-    B_2_2 = [B[i][n // 2:n] for i in range(n // 2, n)]
+        B_1_1 = [B[i][0:n // 2] for i in range(n // 2)]
+        B_1_2 = [B[i][n // 2:n] for i in range(n // 2)]
+        B_2_1 = [B[i][0:n // 2] for i in range(n // 2, n)]
+        B_2_2 = [B[i][n // 2:n] for i in range(n // 2, n)]
 
-# A_1_1 A_1_2       B_1_1 B_1_2       A_1_1*B_1_1 + A_1_2*B_2_1
-# A_2_1 A_2_2   *   B_2_1 B_2_2   =
+        # A_1_1 A_1_2       B_1_1 B_1_2       A_1_1*B_1_1 + A_1_2*B_2_1
+        # A_2_1 A_2_2   *   B_2_1 B_2_2   = ...
 
-    if len(A_1_1[0]) != 1:
         res_1_1 = mat_sum(mat_mul(A_1_1, B_1_1), mat_mul(A_1_2, B_2_1))
         res_1_2 = mat_sum(mat_mul(A_1_1, B_1_2), mat_mul(A_1_2, B_2_2))
         res_2_1 = mat_sum(mat_mul(A_2_1, B_1_1), mat_mul(A_2_2, B_2_1))
@@ -39,24 +41,7 @@ def mat_mul(A, B):
         for i in range(n//2):
             res_2_1[i].extend(res_2_2[i])
             res.append(res_2_1[i])
-        print('res: ', res)
         return res
-
-    else:
-        a_1_1 = A_1_1[0][0]
-        a_1_2 = A_1_2[0][0]
-        a_2_1 = A_2_1[0][0]
-        a_2_2 = A_2_2[0][0]
-
-        b_1_1 = B_1_1[0][0]
-        b_1_2 = B_1_2[0][0]
-        b_2_1 = B_2_1[0][0]
-        b_2_2 = B_2_2[0][0]
-
-        mat_res = [[a_1_1 * b_1_1 + a_1_2 * b_2_1,
-                    a_1_1 * b_1_2 + a_1_2 * b_2_2],
-                   [a_2_1 * b_1_1 + a_2_2 * b_2_1,
-                   a_2_1 * b_1_2 + a_2_2 * b_2_2]]
 
     return mat_res
 
