@@ -23,13 +23,12 @@ def linear_trans(diags, vec):
     return sum
 
 
-def linear_trans_bsgs(diags, vec):
+def linear_trans_bsgs_sigma(diags, vec):
     d = 4
     delta = ceil(sqrt(2*d-1))
+    print("delta=",delta)
     I = ceil((2*d-1)/delta)
-    print('d=', d)
-    print('I=', I)
-    print('delta=', delta)
+    print("I=",I)
     outer_sum = [0]*len(vec)
     for i in range(I):
         inner_sum = [0]*len(vec)
@@ -43,8 +42,28 @@ def linear_trans_bsgs(diags, vec):
         outer_sum = add(outer_sum, rot(inner_sum, i*delta))
     return outer_sum
 
+def linear_trans_bsgs_tau(diags, vec):
+    d = 4
+    delta = ceil(sqrt(2*d-1))
+    print("delta=",delta)
+    I = ceil((2*d-1)/delta)
+    print("I=",I)
+    outer_sum = [0]*len(vec)
+    for i in range(I):
+        inner_sum = [0]*len(vec)
+        for j in range(delta):
+            if i*delta+j-d+1 >= d:
+                break
+            a = rot(diags[i*delta+j-d+1], -i*delta)
+            b = rot(vec, j - d + 1)
+            c = mul(a, b)
+            inner_sum = add(inner_sum, c)
+        outer_sum = add(outer_sum, rot(inner_sum, i*delta))
+    return outer_sum
+
+
 def main():
-    diags = {-3: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+    diags_sigma = {-3: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
              -2: [0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0],
              -1: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
              0: [1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -56,9 +75,8 @@ def main():
     for i in range(16):
         vec.append(i)
     expected = [0, 1, 2, 3, 5, 6, 7, 4, 10, 11, 8, 9, 15, 12, 13, 14]
-    assert(linear_trans(diags, vec) == expected)
-    assert(linear_trans_bsgs(diags, vec) == expected)
-
+    assert(linear_trans(diags_sigma, vec) == expected)
+    assert(linear_trans_bsgs_sigma(diags_sigma, vec) == expected)
 
 
 if __name__ == '__main__':
