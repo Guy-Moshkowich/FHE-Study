@@ -5,7 +5,7 @@ import random
 from numpy.polynomial import Polynomial
 from RLWE.ring_element import RingElement
 import unittest
-from sub_rotation import SubRotation
+from sandbox.sub_rotation import SubRotation
 
 
 class TestSubRotation(unittest.TestCase):

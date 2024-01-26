@@ -83,8 +83,6 @@ class TestContext(unittest.TestCase):
         self.assert_equal(ctx1 * ctx2, context.secret_key, plaintext1 * plaintext2, 30)
 
 
-
-
     def test_swk_gen(self):
         context = Context(log_n=10, q=1009, p=1013)
         s1 = RingElement.random(context.n, context.q)
