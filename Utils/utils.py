@@ -52,8 +52,8 @@ def get_nth_primitive_roots_of_unity(n):
     return [exp(k * c) for k in range(n) if math.gcd(k, n) == 1]
 
 
-def get_canonical_error(ctx, sk, plaintext_expected):
-    plaintext_actual = ctx.decrypt(sk)
+def get_canonical_error(ctx, context, plaintext_expected):
+    plaintext_actual = context.decrypt(ctx)
     diff = plaintext_actual - plaintext_expected
     return diff.canonical_norm()
 

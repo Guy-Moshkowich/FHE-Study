@@ -39,6 +39,12 @@ class Context:
             e = RingElement.small_gauss(self.n, self.q)
         return self.encrypt_core(plaintext, a, self.secret_key, e)
 
+    def decrypt(self, ciphertext) :
+        return self.decrypt_core(ciphertext, self.secret_key)
+
+    def decrypt_core(self, ciphertext, sk):
+        return ciphertext.c0 - (ciphertext.c1 * sk)
+
     # ciphertext:= [a * secret_key + plaintext + e, a]
     def encrypt_core(self, plaintext: RingElement, a: RingElement, secret_key: RingElement, e: RingElement):
         c0 = a * secret_key + plaintext + e
@@ -54,9 +60,9 @@ class Context:
         ctx_compose = [ctx[0].compose(x_power_k), ctx[1].compose(x_power_k)]
         # TODO: key switch.
 
-
-    def generate_swk_core_bit_decomp(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
-        return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
+    #
+    # def generate_swk_core_bit_decomp(self, source_key:RingElement, target_key:RingElement, a:RingElement, e:RingElement):
+    #     return self.encrypt_core(plaintext=source_key, a=a, secret_key=target_key, e=e)
 
     def generate_swk(self, source_key: RingElement, target_key: RingElement):
         a = RingElement.random(self.n, self.q * self.p)

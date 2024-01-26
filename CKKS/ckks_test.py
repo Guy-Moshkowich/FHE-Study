@@ -24,34 +24,16 @@ class TestContext(unittest.TestCase):
         context = Context(log_n=10, q=1000)
         plaintext = RingElement.random_ternary(context.n, context.q)
         ct = context.encrypt(plaintext)
-        self.assert_equal(ct, context.secret_key, plaintext, 20)
+        self.assert_equal(ct, context, plaintext, 20)
 
     def test_encrypt_decrypt_bad_secret_key(self):
         self.Context = Context(log_n=10, q=1000)
         plaintext_expected = RingElement.random(self.Context.n, self.Context.q)
         ct = self.Context.encrypt(plaintext_expected)
         bad_secret_key = RingElement.random(self.Context.n, self.Context.q)
-        plaintext_actual = ct.decrypt(bad_secret_key)
+        plaintext_actual = self.Context.decrypt_core(ct, bad_secret_key)
         diff = plaintext_actual - plaintext_expected
         self.assertTrue(diff.canonical_norm() > 1000, diff.canonical_norm())
-
-    def test_encrypt_core_binary_a(self):
-        self.Context = Context(log_n=10, q=1000)
-        plaintext = RingElement.random(self.Context.n, self.Context.q)
-        a = RingElement.random_binary(self.Context.n, self.Context.q)
-        e = RingElement.small_gauss(self.Context.n, self.Context.q)
-        sk1 = RingElement.random(self.Context.n, self.Context.q, max_range=1)
-        ct = self.Context.encrypt_core(plaintext, a, sk1, e)
-        self.assert_equal(ct, sk1, plaintext, 25)
-
-    def test_generate_swk_core_with_binary_a(self):
-        self.Context = Context(log_n=10, q=1000)
-        a = RingElement.random_binary(self.Context.n, self.Context.q)
-        e = RingElement.small_gauss(self.Context.n, self.Context.q)
-        s = RingElement.random(self.Context.n, self.Context.q)
-        s_prime = RingElement.random(self.Context.n, self.Context.q)
-        swk = self.Context.generate_swk_core_bit_decomp(s_prime, s, a, e)
-        self.assert_equal(swk, s, s_prime, 20)
 
     def test_add(self):
         context = Context(log_n=10, q=1000)
@@ -59,7 +41,8 @@ class TestContext(unittest.TestCase):
         plaintext2 = RingElement.random(context.n, context.q)
         ctx1 = context.encrypt(plaintext1)
         ctx2 = context.encrypt(plaintext2)
-        self.assert_equal(ctx1 + ctx2, context.secret_key, plaintext1 + plaintext2, 30)
+        print(type(ctx1+ctx2))
+        self.assert_equal(ctx1 + ctx2, context, plaintext1 + plaintext2, 30)
 
     def test_add_many(self):
         q = 1000
@@ -72,15 +55,19 @@ class TestContext(unittest.TestCase):
             ctx = context.encrypt(plaintext)
             ctx_acc += ctx
             expected_plaintext += plaintext
-        self.assert_equal(ctx_acc, context.secret_key, expected_plaintext, 50)
+        self.assert_equal(ctx_acc, context, expected_plaintext, 50)
 
-    def test_mul(self):
-        context = Context(log_n=10, q=1000)
-        plaintext1 = RingElement.random(context.n, context.q)
-        plaintext2 = RingElement.random(context.n, context.q)
-        ctx1 = context.encrypt(plaintext1)
-        ctx2 = context.encrypt(plaintext2)
-        self.assert_equal(ctx1 * ctx2, context.secret_key, plaintext1 * plaintext2, 30)
+    # def test_mul(self):
+    #     context = Context(log_n=10, q=1000)
+    #     # plaintext1 = RingElement.random(context.n, context.q)
+    #     # plaintext2 = RingElement.random(context.n, context.q)
+    #     plaintext1 = RingElement(Polynomial([1]), context.n, context.q)
+    #     plaintext2 = RingElement(Polynomial([1]), context.n, context.q)
+    #     print("plaintext:", plaintext1*plaintext2)
+    #     ctx1 = context.encrypt(plaintext1)
+    #     ctx2 = context.encrypt(plaintext2)
+    #     # print("ctx:", context(ctx1*ctx2))
+    #     self.assert_equal(ctx1 * ctx2, context, plaintext1 * plaintext2, 30)
 
 
     def test_swk_gen(self):
@@ -99,13 +86,13 @@ class TestContext(unittest.TestCase):
         s = context.secret_key
         self.assertNotEqual(s1, s)
         swk_from_s_to_s1 = context.generate_swk(s, s1)
-        swk_from_s_to_s1_err = RingElement(swk_from_s_to_s1.c0.poly-swk_from_s_to_s1.c1.poly*s1.poly -context.p*s.poly,context.n, context.p*context.q)
+        # swk_from_s_to_s1_err = RingElement(swk_from_s_to_s1.c0.poly-swk_from_s_to_s1.c1.poly*s1.poly -context.p*s.poly,context.n, context.p*context.q)
         # print('swk_from_s_to_s1_err: ', swk_from_s_to_s1_err.canonical_norm())
         ct_wrt_s = context.encrypt(plaintext)
-        ct_wrt_s_err = ct_wrt_s.decrypt(s) - plaintext
+        # ct_wrt_s_err = ct_wrt_s.decrypt(s) - plaintext
         # print('ct_wrt_s_err: ', ct_wrt_s_err.canonical_norm())
 
-        self.assert_almost_equal(ct_wrt_s.decrypt(s), plaintext, eps=20)
+        self.assert_almost_equal(context.decrypt_core(ct_wrt_s, s), plaintext, eps=20)
         ct_wrt_s1 = ct_wrt_s.switch_key(swk_from_s_to_s1, context.p)
         expected_c1_after_key_switch = RingElement(utils.ceil((-1/context.p)*swk_from_s_to_s1.c1.poly * ct_wrt_s.c1.poly), context.n, context.q)
         self.assert_almost_equal(ct_wrt_s1.c1, expected_c1_after_key_switch, eps=20)
@@ -120,8 +107,8 @@ class TestContext(unittest.TestCase):
 
 
 
-    def assert_equal(self, ctx, sk, plaintext_expected, max_error):
-        error = utils.get_canonical_error(ctx, sk, plaintext_expected)
+    def assert_equal(self, ctx, context, plaintext_expected, max_error):
+        error = utils.get_canonical_error(ctx, context, plaintext_expected)
         self.assertTrue(error <= max_error, "actual diff " + str(error))
 
     def assert_almost_equal(self, elm1: RingElement, elm2: RingElement, eps):

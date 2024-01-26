@@ -1,5 +1,6 @@
 from CKKS.context import *
 from Utils.utils import *
+from RLWE import *
 
 class Ciphertext:
     c0: RingElement
@@ -54,8 +55,7 @@ class Ciphertext:
         new_ctx = Ciphertext(self.c0-(self.c1*swk.c0),  minus_one*self.c1*swk.c1)
         return new_ctx
 
-    def decrypt(self, secret_key):
-        return self.c0 - (self.c1*secret_key)
+
 
 
 
