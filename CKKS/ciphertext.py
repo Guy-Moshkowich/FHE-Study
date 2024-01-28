@@ -1,6 +1,6 @@
 from CKKS.context import *
 from Utils.utils import *
-from RLWE import *
+from RLWE.ring_element import RingElement
 
 class Ciphertext:
     c0: RingElement
@@ -9,12 +9,15 @@ class Ciphertext:
 
     def __init__(self, context, c0: RingElement, c1: RingElement):
         self.context = context
-        self.c0 = c0
+        self.c0 = c0 #TODO: rename c0->b and c1->a
         self.c1 = c1
 
     def __add__(self, other):
         return Ciphertext(self.context, self.c0 + other.c0, self.c1 + other.c1)
 
+    # (d0, d1) + round(P^{-1}*d2*eval_key) mod Q
+    # Where (d0,d1,d2) := (b1*b2, a1*b2+a2*b1, a1*a2)
+    # eval_key = (a*sk + P*sk^2 + e, a)
     def __mul__(self, other):
         b1 = self.c0
         b2 = other.c0
@@ -24,12 +27,12 @@ class Ciphertext:
         n = self.context.n
         q = self.context.q
         p_inv = 1/self.context.p
-        new_c0 = RingElement(-ceil(p_inv*a1.poly*a2.poly*eval_key.c0.poly), n, q)
-        new_c1 = RingElement(-ceil(p_inv*a1.poly*a2.poly*eval_key.c1.poly), n, q)
+        new_c0 = RingElement(ceil(p_inv*a1.poly*a2.poly*eval_key.c0.poly), n, q)
+        new_c1 = RingElement(ceil(p_inv*a1.poly*a2.poly*eval_key.c1.poly), n, q)
         ctx1 = Ciphertext(self, b1*b2, a1*b2+a2*b1)
         ctx2 = Ciphertext(self, new_c0, new_c1)
-        # ctx2 = Ciphertext(round(p_inv*a1*a2*eval_key.c0), round(p_inv*a1*a2*eval_key.c1))
-        return ctx1 + ctx2
+        mul = ctx1 + ctx2
+        return mul
 
     def switch_key(self, swk, p):
         p_inv = 1/p

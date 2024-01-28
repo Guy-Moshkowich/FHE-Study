@@ -7,10 +7,6 @@ from Utils import utils
 
 class TestContext(unittest.TestCase):
 
-    def setUp(self):
-        self.max_error = 10
-        self.Context = Context(log_n=3, q=256, max_added_noise=self.max_error // 2)
-
     def test_generate_secret_key(self):
         context = Context(log_n=10, q=1000)
         s = context.generate_secret_key()
@@ -20,6 +16,32 @@ class TestContext(unittest.TestCase):
                 count_non_zero_coefs += 1
         self.assertLessEqual(count_non_zero_coefs, context.h)
 
+    def test_generate_eval_key(self):
+        context = Context(log_n=10, q=11, p=7)
+        ek = context.eval_key
+        sk = context.secret_key
+        n = context.n
+        q = context.q
+        p = context.p
+        p_ring = RingElement.const(p, n, q)
+        dec = RingElement(ek.c0.poly-ek.c1.poly*sk.poly, n, q)
+        m = p_ring*sk*sk
+        diff = (dec - m).canonical_norm()
+        self.assertLess(diff, 20)
+
+    def test_generate_eval_key_ceil(self):
+        context = Context(log_n=10, q=11, p=7)
+        ek = context.eval_key
+        sk = context.secret_key
+        n = context.n
+        q = context.q
+        p = context.p
+        inv_p = 1/p
+        dec = RingElement(utils.ceil(inv_p*(ek.c0.poly - ek.c1.poly * sk.poly)), n, q)
+        m = sk * sk
+        diff = (dec - m).canonical_norm()
+        self.assertLess(diff, 20)
+
     def test_encrypt_decrypt(self):
         context = Context(log_n=10, q=1000)
         plaintext = RingElement.random_ternary(context.n, context.q)
@@ -27,11 +49,11 @@ class TestContext(unittest.TestCase):
         self.assert_equal(ct, context, plaintext, 20)
 
     def test_encrypt_decrypt_bad_secret_key(self):
-        self.Context = Context(log_n=10, q=1000)
-        plaintext_expected = RingElement.random(self.Context.n, self.Context.q)
-        ct = self.Context.encrypt(plaintext_expected)
-        bad_secret_key = RingElement.random(self.Context.n, self.Context.q)
-        plaintext_actual = self.Context.decrypt_core(ct, bad_secret_key)
+        context = Context(log_n=10, q=1000)
+        plaintext_expected = RingElement.random(context.n, context.q)
+        ct = context.encrypt(plaintext_expected)
+        bad_secret_key = RingElement.random(context.n, context.q)
+        plaintext_actual = context.decrypt_core(ct, bad_secret_key)
         diff = plaintext_actual - plaintext_expected
         self.assertTrue(diff.canonical_norm() > 1000, diff.canonical_norm())
 
@@ -57,18 +79,13 @@ class TestContext(unittest.TestCase):
             expected_plaintext += plaintext
         self.assert_equal(ctx_acc, context, expected_plaintext, 50)
 
-    # def test_mul(self):
-    #     context = Context(log_n=10, q=1000)
-    #     # plaintext1 = RingElement.random(context.n, context.q)
-    #     # plaintext2 = RingElement.random(context.n, context.q)
-    #     plaintext1 = RingElement(Polynomial([1]), context.n, context.q)
-    #     plaintext2 = RingElement(Polynomial([1]), context.n, context.q)
-    #     print("plaintext:", plaintext1*plaintext2)
-    #     ctx1 = context.encrypt(plaintext1)
-    #     ctx2 = context.encrypt(plaintext2)
-    #     # print("ctx:", context(ctx1*ctx2))
-    #     self.assert_equal(ctx1 * ctx2, context, plaintext1 * plaintext2, 30)
-
+    def test_mul(self):
+        context = Context(log_n=3, q=17, p=2, is_debug=True)
+        plaintext1 = RingElement(Polynomial([2]), context.n, context.q)
+        plaintext2 = RingElement(Polynomial([3]), context.n, context.q)
+        ctx1 = context.encrypt(plaintext1)
+        ctx2 = context.encrypt(plaintext2)
+        self.assert_equal(ctx1 * ctx2, context, plaintext1 * plaintext2, 30)
 
     def test_swk_gen(self):
         context = Context(log_n=10, q=1009, p=1013)
