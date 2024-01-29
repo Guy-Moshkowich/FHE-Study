@@ -81,8 +81,8 @@ class TestContext(unittest.TestCase):
 
     def test_mul(self):
         context = Context(log_n=3, q=17, p=2, is_debug=True)
-        plaintext1 = RingElement(Polynomial([2]), context.n, context.q)
-        plaintext2 = RingElement(Polynomial([3]), context.n, context.q)
+        plaintext1 = RingElement.random(context.n, context.q)
+        plaintext2 = RingElement.random(context.n, context.q)
         ctx1 = context.encrypt(plaintext1)
         ctx2 = context.encrypt(plaintext2)
         self.assert_equal(ctx1 * ctx2, context, plaintext1 * plaintext2, 30)

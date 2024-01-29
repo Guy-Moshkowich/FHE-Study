@@ -9,7 +9,7 @@ class Ciphertext:
 
     def __init__(self, context, c0: RingElement, c1: RingElement):
         self.context = context
-        self.c0 = c0 #TODO: rename c0->b and c1->a
+        self.c0 = c0
         self.c1 = c1
 
     def __add__(self, other):
