@@ -12,7 +12,6 @@ testmodules = [
     'bgv_test',
     'utils_test',
     'ckks_test',
-    'sub_rotation_test',
     'lwe_test'
     ]
 

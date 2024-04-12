@@ -2,7 +2,7 @@ from numpy.polynomial import Polynomial
 import random
 import numpy as np
 from Utils import utils
-
+from barrett_reduction import Barrett
 
 class RingElement:
     primitive_roots = []
@@ -10,6 +10,7 @@ class RingElement:
 
     def __init__(self, poly: Polynomial, m: int, mod: int):
         self.mod = mod
+        self.barrett = Barrett(mod)
         self.dim = m
         self.phi_m = utils.build_cyclotomic_poly(self.dim)
         self.poly = self.modulo(poly, self.mod, self.phi_m)
@@ -37,7 +38,7 @@ class RingElement:
         return all(v == 0 for v in (self.poly-other.poly).coef)
 
     def __str__(self):
-        return 'first 10 coefficients:' + str(self.poly.coef[:10]) + ", degree: " + str(self.dim) + ', modulo: ' + str(
+        return str(self.poly.coef) + ", degree: " + str(self.dim) + ', modulo: ' + str(
             self.mod)
 
     @classmethod
@@ -73,7 +74,7 @@ class RingElement:
 
     def modulo(self, poly: Polynomial, mod: int, phi_m: Polynomial):
         poly_modulo_phi_m = utils.modulo_polynomial(poly, phi_m)
-        poly_modulo_phi_m_q = [x % mod for x in poly_modulo_phi_m.coef]
+        poly_modulo_phi_m_q = [x % self.mod for x in poly_modulo_phi_m.coef]
         poly_modulo_phi_m_q_recentered = [utils.recenter(x, mod) for x in poly_modulo_phi_m_q]
         return Polynomial(poly_modulo_phi_m_q_recentered)
 
@@ -86,7 +87,6 @@ class RingElement:
         return utils.canonical_norm(self.poly, self.dim)
 
     def automorphism(self, k: int):
-        #k_mod = k % (self.dim // 2)
         x_power_k_vec = [0]*k
         x_power_k_vec.append(1)
         x_power_k = Polynomial(x_power_k_vec)
