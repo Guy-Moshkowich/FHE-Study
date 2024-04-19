@@ -10,7 +10,6 @@ class Barrett:
         assert almost_equal(self.m/(2**self.k), 1/modulo, 1/2**self.k)
 
     def mod(self, x: int) -> int:
-        assert(x < self.modulo**2)
         r = x - ((x*self.m) >> self.k)*self.modulo
         if r >= self.modulo:
             r = r - self.modulo
