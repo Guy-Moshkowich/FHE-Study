@@ -5,17 +5,15 @@ class CRT:
         self.qi_inv_mod_qj = [[0] * self.L] * self.L
         self.qi_hat = [0] * self.L
         self.qi_hat_inv_mod_qi = [0] * self.L
-        self.Q = None
         self.init_q_hat()
         self.init_qi_hat_inv_mod_qi()
         self.init_qi_inv_mod_qj()
-        self.init_Q()
-
-    def init_Q(self):
-        global Q
-        Q = 1
+        self.Q = 1
         for i in range(self.L):
-            Q = Q * self.primes[i]
+            self.Q = self.Q * self.primes[i]
+
+
+
 
     def init_qi_hat_inv_mod_qi(self):
         for i in range(self.L):
@@ -39,11 +37,12 @@ class CRT:
                     prod = prod * self.primes[j]
             self.qi_hat[i] = prod
 
-
     def rescale(self, crt):
         res =[]
         for i in range(len(crt)):
-            res.append(((crt[i]-crt[self.L-1])*self.qi_inv_mod_qj[self.L-1][i]) % self.primes[i])
+            diff = (crt[i]-crt[self.L-1]) % self.primes[i]
+            r = (diff*self.qi_inv_mod_qj[self.L-1][i]) % self.primes[i]
+            res.append(r)
         return res
 
     def crtToBigInt(self, crt, level):
@@ -80,36 +79,9 @@ def main():
     big_int2 = 5711057810600191723137071220892716933009785801822074336086157765
     crt2 = [big_int2 % primes[i] for i in range(crt_module.L)]
     assert big_int2 == crt_module.crtToBigInt(crt2, crt_module.L)
-
-    # init()
-    # assert big_int2 < Q/2
-    # crt2 = [big_int2 % primes[i] for i in range(L)]
-    # assert big_int2 == crtToBigInt(crt2, L)
-    # print('crt2=', crt2)
-    # # print("big_int2_from_crt=",  crtToBigInt(crt2, L))
-    # expected2 = big_int2//primes[L-1]
-    # print('expected2=', expected2)
-    #
-    # crt2_rescaled = rescale(crt2)
-    # print("crt2_rescaled=", crt2_rescaled)
-    # print("big_int2_rescaled",  crtToBigInt(crt2_rescaled, L - 1))
-    #
-    # big_int = 10741460466601571728957078983049652939238945085500696422459756533
-    # expected = big_int//primes[L-1]
-    # print('expected=', expected)
-    # print('expected CRT=', [expected % primes[i] for i in range(L-1)])
-    # crt = [big_int % prime for prime in primes]
-    # # crt = [3947265819819504, 2932785485109328, 368783843801005, 17638066271951182]
-    # print("big_int_crt=", crt)
-    # assert crtToBigInt(crt, L) == big_int
-    #
-    # crt_rescaled = rescale(crt)
-    # print("crt_rescaled=", crt_rescaled)
-    # big_int_rescaled = crtToBigInt(crt_rescaled, L-1)
-    # print(big_int_rescaled)
-    # print( [big_int_rescaled % prime for prime in primes])
-    # print(crtToBigInt([big_int_rescaled % prime for prime in primes],L))
-    # print('Q=',Q)
+    print(90071992553308165/18014398510661633)
+    print(crt_module.Q)
+    print(crt_module.Q/2>3723092598124141037845717590833633670269211418086548928700099434)
 
 if __name__ == '__main__':
     main()

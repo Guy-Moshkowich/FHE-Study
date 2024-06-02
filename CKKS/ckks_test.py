@@ -44,9 +44,26 @@ class TestContext(unittest.TestCase):
 
     def test_encrypt_decrypt(self):
         context = Context(log_n=10, q=1000)
-        plaintext = RingElement.random_ternary(context.n, context.q)
+        plaintext = RingElement.random(context.n, context.q)
         ct = context.encrypt(plaintext)
         self.assert_equal(ct, context, plaintext, 20)
+
+    def test_rescale(self):
+        p1 = 3
+        p2 = 101
+        Q = p1*p2
+        context = Context(log_n=4, q=Q)
+        plaintext = RingElement(Polynomial([40,70,53]), context.n,context.q);
+        print(plaintext)
+
+        ct = context.encrypt(plaintext)
+        plaintextDecrypt = context.decrypt(ct);
+        print(plaintextDecrypt)
+        ct.rescale_by(p1);
+        context.secret_key = RingElement(context.secret_key.poly, context.n, Q/p1)
+        plaintextDecrypt = context.decrypt(ct);
+        print(plaintextDecrypt)
+        # self.assert_equal(ct, context, plaintext, 20)
 
     def test_encrypt_decrypt_bad_secret_key(self):
         context = Context(log_n=10, q=1000)

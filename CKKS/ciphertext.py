@@ -58,7 +58,12 @@ class Ciphertext:
         new_ctx = Ciphertext(self.c0-(self.c1*swk.c0),  minus_one*self.c1*swk.c1)
         return new_ctx
 
-
+    def rescale_by(self, p):
+        p_inv = 1/p
+        c0_new = Polynomial([round(p_inv*x) for x in self.c0.poly.coef])
+        c1_new = Polynomial([round(p_inv*x) for x in self.c1.poly.coef])
+        self.c0 = RingElement(c0_new, self.context.n,round(self.context.q*p_inv))
+        self.c1 = RingElement(c1_new, self.context.n,round(self.context.q*p_inv))
 
 
 

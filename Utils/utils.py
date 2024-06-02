@@ -350,6 +350,23 @@ def bit_reverse(num, num_bits: int):
     return reversed_num
 
 
+def read_uint64_from_file(filename):
+    data = []
+    try:
+        with open(filename, 'r') as file:
+            for line in file:
+                # Convert each line to an integer and append to the list
+                data.append(int(line.strip()))
+    except FileNotFoundError:
+        print(f"Error: The file {filename} does not exist.")
+    except ValueError:
+        print("Error: All lines in the file must contain only numbers.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    return data
+
+
+
 # def inplaceNegacyclicNTT( N:int, vals: typing.List[complex]):
 #     t = N #N
 #     n = int(math.log(N))

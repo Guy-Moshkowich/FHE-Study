@@ -2,7 +2,7 @@ from numpy.polynomial import Polynomial
 import random
 import numpy as np
 from Utils import utils
-from barrett_reduction import Barrett
+# from barrett_reduction import Barrett
 
 class RingElement:
     primitive_roots = []
@@ -10,7 +10,7 @@ class RingElement:
 
     def __init__(self, poly: Polynomial, m: int, mod: int):
         self.mod = mod
-        self.barrett = Barrett(mod)
+        # self.barrett = Barrett(mod)
         self.dim = m
         self.phi_m = utils.build_cyclotomic_poly(self.dim)
         self.poly = self.modulo(poly, self.mod, self.phi_m)
