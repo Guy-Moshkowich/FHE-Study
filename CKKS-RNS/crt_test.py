@@ -1,6 +1,5 @@
 import unittest
-from crt import *
-
+from scheme import *
 
 class TestCrt(unittest.TestCase):
 
@@ -73,4 +72,22 @@ class TestCrt(unittest.TestCase):
         res = sub(relin_key_bx, ax_times_sk_qipi , qipi)
         self.assertEqual(sk_sqr_times_p_piqi, res) # relin encrypts P*sk^2
 
+    def test_enc_dec(self):
+        qi = [97, 193]
+        sk_qi = gen_sk(qi)
+        pt_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
+        ax_qi, bx_qi = encrypt(pt_qi, sk_qi, qi)
+        pt_dec_qi = decrypt(ax_qi, bx_qi, sk_qi, qi)
+        self.assertEqual(pt_dec_qi, pt_qi)
 
+    def test_he_add(self):
+        qi = [97, 193]
+        sk_qi = gen_sk(qi)
+        pt1_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
+        pt2_qi = coef_to_crt([9, 10, 11, 12, 13, 14, 15, 16], qi)
+        exp_qi = [10, 12, 14, 16, 18, 20, 22, 24]
+        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
+        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+        res_ax, res_bx = he_add(ax1_qi, bx1_qi,ax2_qi, bx2_qi, qi)
+        res_dec_qi = decrypt(res_ax, res_bx, sk_qi, qi)
+        self.assertEqual(crt_to_coef(res_dec_qi,qi), exp_qi)

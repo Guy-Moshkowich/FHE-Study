@@ -122,38 +122,4 @@ def mod_up(poly_crt, qi, pi):
     return poly_crt
 
 
-def gen_relin_key(sk, qi, pi):
-    relin_key_ax = gen_rand_poly_crt(qipi)
-    sk_qipi = mod_up(sk, qi, pi)
-    ax_time_sk_qipi = mul(relin_key_ax, sk_qipi, qipi)
-    sk_sqr_piqi = mul(sk_qipi, sk_qipi, qipi)
-    sk_sqr_times_p_piqi = mul_scalar(P, sk_sqr_piqi, qipi)
-    relin_key_bx = add(ax_time_sk_qipi, sk_sqr_times_p_piqi, qipi)
-    return relin_key_ax, relin_key_bx
 
-
-def main():
-    sk = gen_sk(qi)
-    print("sk",sk)
-    sk_crt = coef_to_crt(sk,qi)
-    print("sk_crt: ", sk_crt)
-    sk_sqr_crt = mul(sk_crt, sk_crt, qi)
-    print("sk_sqr: ", sk_sqr_crt)
-    print(crt_to_coef(sk_crt,qi))
-
-    tmp1 = coef_to_crt([2,0,0,0,0,0,0,0], qi)
-    print("tmp1", tmp1)
-    tmp2 = coef_to_crt([3,0,0,0,0,0,0,0], qi)
-    print("tmp2", tmp2)
-    print("tmp1*tmp2=", mul(tmp1, tmp2, qi))
-
-    print("mul_scalar: ", mul_scalar(2, sk_crt, qi))
-    sk_sqr_time_p_crt = mul_scalar(P, sk_sqr_crt,qi)
-    ax_crt = gen_rand_poly_crt(qipi)
-    ax_times_sk_crt = mul(sk_crt, ax_crt, qipi)
-
-
-
-
-if __name__ == '__main__':
-    main()
