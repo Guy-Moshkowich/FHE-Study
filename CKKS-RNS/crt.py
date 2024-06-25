@@ -12,12 +12,6 @@ P = 101*103
 cyc = Polynomial([1,0,0,0,0,0,0,0,1])
 
 
-def gen_sk(primes):
-    M = 1
-    for p in primes:
-        M = M * p
-    return [random.choice([M-1, 0, 1]) for _ in range(n)]
-
 
 def coef_to_crt(poly_coef, primes):
     crt = [0]*(n*len(primes))
@@ -26,6 +20,14 @@ def coef_to_crt(poly_coef, primes):
             idx = j*n+i
             crt[idx] = poly_coef[i] % primes[j]
     return crt
+
+
+def gen_sk(primes):
+    M = 1
+    for p in primes:
+        M = M * p
+    sk_coef =  [random.choice([M-1, 0, 1]) for _ in range(n)]
+    return coef_to_crt(sk_coef, primes)
 
 
 def crt_to_coef(poly_crt, primes):
@@ -72,6 +74,15 @@ def add(poly1_crt, poly2_crt, primes):
     return out_crt
 
 
+def sub(poly1_crt, poly2_crt, primes):
+    out_crt = [0]*n*len(primes)
+    for j in range(len(primes)):
+        for i in range(n):
+            idx = j*n+i
+            out_crt[idx] = (poly1_crt[idx]-poly2_crt[idx]) % primes[j]
+    return out_crt
+
+
 def mul(poly1_crt, poly2_crt, primes):
     M = 1
     for p in primes:
@@ -98,6 +109,27 @@ def gen_rand_poly_crt(primes):
         M = M*p
     poly_rand_coef = [random.randint(0, M) for _ in range(n)]
     return coef_to_crt(poly_rand_coef, primes)
+
+
+def mod_up(poly_crt, qi, pi):
+    poly_coef = crt_to_coef(poly_crt, qi)
+    poly_pi = [0]*len(pi)*n
+    for i in range(len(pi)):
+        for j in range(n):
+            idx = i*n+j
+            poly_pi[idx] = poly_coef[j] % pi[i]
+    poly_crt.extend(poly_pi)
+    return poly_crt
+
+
+def gen_relin_key(sk, qi, pi):
+    relin_key_ax = gen_rand_poly_crt(qipi)
+    sk_qipi = mod_up(sk, qi, pi)
+    ax_time_sk_qipi = mul(relin_key_ax, sk_qipi, qipi)
+    sk_sqr_piqi = mul(sk_qipi, sk_qipi, qipi)
+    sk_sqr_times_p_piqi = mul_scalar(P, sk_sqr_piqi, qipi)
+    relin_key_bx = add(ax_time_sk_qipi, sk_sqr_times_p_piqi, qipi)
+    return relin_key_ax, relin_key_bx
 
 
 def main():
