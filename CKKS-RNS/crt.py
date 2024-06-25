@@ -11,6 +11,11 @@ Q = 97*193
 P = 101*103
 cyc = Polynomial([1,0,0,0,0,0,0,0,1])
 
+inv_P_qi = [0]*len(qi)
+for i in range(len(qi)):
+    P_qi = P % qi[i]
+    inv_P = pow(P_qi, qi[i] - 2,  qi[i])
+    inv_P_qi[i] = inv_P
 
 
 def coef_to_crt(poly_coef, primes):
@@ -22,12 +27,7 @@ def coef_to_crt(poly_coef, primes):
     return crt
 
 
-def gen_sk(primes):
-    M = 1
-    for p in primes:
-        M = M * p
-    sk_coef =  [random.choice([M-1, 0, 1]) for _ in range(n)]
-    return coef_to_crt(sk_coef, primes)
+
 
 
 def crt_to_coef(poly_crt, primes):
@@ -50,6 +50,11 @@ def crt_to_coef_elm(crt_elm, primes):
         out = out + crt_elm[j]*qi_hat(j,primes)*inv_qi_hat(j,primes)
     return out % M
 
+def coef_to_crt_elm(elm_coef, primes):
+    out = [0]*len(primes)
+    for j in range(len(primes)):
+        out[j] = elm_coef % primes[j]
+    return out
 
 def qi_hat(j, primes):
     out = 1
@@ -111,15 +116,37 @@ def gen_rand_poly_crt(primes):
     return coef_to_crt(poly_rand_coef, primes)
 
 
-def mod_up(poly_crt, qi, pi):
-    poly_coef = crt_to_coef(poly_crt, qi)
+def mod_up(poly_qi, qi, pi):
+    poly_coef = crt_to_coef(poly_qi, qi)
     poly_pi = [0]*len(pi)*n
     for i in range(len(pi)):
         for j in range(n):
             idx = i*n+j
             poly_pi[idx] = poly_coef[j] % pi[i]
-    poly_crt.extend(poly_pi)
-    return poly_crt
+    poly_qi.extend(poly_pi)
+    return poly_qi
 
 
+def mod_down_elm(elm_qipi, qipi, qi):
+    out = []
+    pi = qipi[-(len(qipi)-len(qi)):]
+    elm_pi = elm_qipi[-len(pi):]
+    elm_P = crt_to_coef_elm(elm_pi, pi)
+    a_qi = coef_to_crt_elm(elm_P, qi)
+    for i in range(len(qi)):
+        b_qi = elm_qipi[i]
+        out.append(((b_qi - a_qi[i]) * inv_P_qi[i]) %qi[i])
+    return out
 
+def mod_down(poly_qipi, qipi, qi):
+    out = [0]*n*len(qi)
+    for i in range(n):
+        elm_qipi = [0]*len(qipi)
+        for j in range(len(qipi)):
+            idx = j*n+i
+            elm_qipi[j] = poly_qipi[idx]
+        elm_qi = mod_down_elm(elm_qipi, qipi, qi)
+        for j in range(len(qi)):
+            idx = j * n + i
+            out[idx] = elm_qi[j]
+    return out

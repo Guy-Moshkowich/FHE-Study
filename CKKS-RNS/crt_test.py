@@ -16,6 +16,13 @@ class TestCrt(unittest.TestCase):
         exp = [0, 96, 0, 1, 1, 0, 1, 96]
         self.assertEqual(poly_coef, exp)
 
+    def test_coef_to_crt_elm(self):
+        qi = [97, 193]
+        elm = 200
+        out = coef_to_crt_elm(elm, qi)
+        exp = [6, 7]
+        self.assertEqual(out, exp)
+
     def test_add(self):
         qi = [5,7]
         tmp1 = coef_to_crt([1,2,3,4,5,6,7,8], qi)
@@ -91,3 +98,21 @@ class TestCrt(unittest.TestCase):
         res_ax, res_bx = he_add(ax1_qi, bx1_qi,ax2_qi, bx2_qi, qi)
         res_dec_qi = decrypt(res_ax, res_bx, sk_qi, qi)
         self.assertEqual(crt_to_coef(res_dec_qi,qi), exp_qi)
+
+    def test_mod_down_elm(self):
+        qi = [97, 193]
+        qipi = [97, 193, 101, 103]
+        elm_coef = 2*P+2
+        elm_qipi = coef_to_crt_elm(elm_coef, qipi)
+        elm_qi = mod_down_elm(elm_qipi, qipi, qi)
+        exp = round(elm_coef/P)
+        self.assertEqual(crt_to_coef_elm(elm_qi, qi), exp)
+
+    def test_mod_down(self):
+        qi = [97, 193]
+        qipi = [97, 193, 101, 103]
+        poly_coef = [i*P+10*i for i in range(n)]
+        poly_qipi = coef_to_crt(poly_coef, qipi)
+        poly_qi = mod_down(poly_qipi, qipi, qi)
+        exp = [0, 1, 2, 3, 4, 5, 6, 7]
+        self.assertEqual(exp, crt_to_coef(poly_qi, qi))

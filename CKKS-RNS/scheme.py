@@ -1,6 +1,22 @@
 from crt import *
 
-# def he_mul(ax1, bx1, ax2, bx2):
+
+def gen_sk(primes):
+    M = 1
+    for p in primes:
+        M = M * p
+    sk_coef =  [random.choice([M-1, 0, 1]) for _ in range(n)]
+    return coef_to_crt(sk_coef, primes)
+
+def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi):
+    d0_qi = mul(bx1, bx2, qi)
+    d1_qi = add(mul(bx1, ax2, qi),mul(bx2, ax1, qi), qi)
+    d2_qi = mul(ax1, ax2, qi)
+    d2_qipi = mod_up(d2_qi, qi, pi)
+    d2_time_evk_ax_qipi = mul(d2_qipi, relin_key_ax_qipi)
+    d2_time_evk_bx_qipi = mul(d2_qipi, relin_key_bx_qipi)
+
+
 
 
 def he_add(ax1, bx1, ax2, bx2, qi):
