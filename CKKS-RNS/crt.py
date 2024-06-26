@@ -4,18 +4,21 @@ import random
 
 random.seed(0)
 n = 8
-qi = [97, 193]
-pi = [101,103]
-qipi = [97,193,101,103]
-Q = 97*193
-P = 101*103
+# qi = [97, 193]
+# pi = [101,103]
+# qipi = [97,193,101,103]
+# Q = 97*193
+# P = 101*103
+
+# qi = [3,5]
+# pi = [7,11]
+# qipi = [3,5,7,11]
+# Q = 3*5
+# P = 7*11
+
+
 cyc = Polynomial([1,0,0,0,0,0,0,0,1])
 
-inv_P_qi = [0]*len(qi)
-for i in range(len(qi)):
-    P_qi = P % qi[i]
-    inv_P = pow(P_qi, qi[i] - 2,  qi[i])
-    inv_P_qi[i] = inv_P
 
 
 def coef_to_crt(poly_coef, primes):
@@ -93,11 +96,36 @@ def mul(poly1_crt, poly2_crt, primes):
     for p in primes:
         M = M * p
     poly1 = Polynomial(crt_to_coef(poly1_crt, primes))
-    poly2 = Polynomial(crt_to_coef(poly2_crt,primes))
-    mul_mod_cyc = utils.modulo_polynomial(poly1*poly2, cyc).coef
+    # print('poly1: ', poly1)
+    poly2 = Polynomial(crt_to_coef(poly2_crt, primes))
+    # mul_poly_mod = Polynomial([int(x) % M for x in poly1*poly2.coef])
+    mul_mod_cyc = utils.modulo_polynomial(poly1*poly2.coef, cyc).coef
     mul_mod_cyc_mod_q = [int(x) % M for x in mul_mod_cyc]
     return coef_to_crt(mul_mod_cyc_mod_q, primes)
 
+# def mul2(poly1_crt, poly2_crt, primes):
+#     M = 1
+#     for p in primes:
+#         M = M * p
+#     p1 = crt_to_coef(poly1_crt, primes)
+#     p1.reverse()
+#     poly1 = np.poly1d(p1)
+#     print('poly1: ', poly1)
+#     p2 = crt_to_coef(poly2_crt, primes)
+#     p2.reverse()
+#     poly2 = np.poly1d(p2)
+#     mul_res = poly1*poly2
+#     _, remainder = np.divmod(poly1*poly2, cyc)
+#     # mul_poly = poly1*poly2
+#     r = remainder.tolist()
+#     r.reverse()
+#     # mul_poly_mod = Polynomial([int(x) % M for x in remainder.coef])
+#     mul_mod_cyc_mod_q = [int(x) % M for x in r]
+#
+#
+#     # mul_mod_cyc = utils.modulo_polynomial(mul_poly_mod, cyc).coef
+#     # mul_mod_cyc_mod_q = [int(x) % M for x in mul_mod_cyc]
+#     return coef_to_crt(mul_mod_cyc_mod_q, primes)
 
 def mul_scalar(scalar, poly_crt, primes):
     out = [0]*n*len(primes)
@@ -108,7 +136,11 @@ def mul_scalar(scalar, poly_crt, primes):
     return out
 
 
-def gen_rand_poly_crt(primes):
+def gen_rand_poly_crt(primes, debug=False):
+    if debug:
+        rnd_poly = coef_to_crt([3,0,0,0,0,0,0,0],primes)
+        print('rnd_poly: ', rnd_poly)
+        return rnd_poly
     M = 1
     for p in primes:
         M = M*p
@@ -123,13 +155,24 @@ def mod_up(poly_qi, qi, pi):
         for j in range(n):
             idx = i*n+j
             poly_pi[idx] = poly_coef[j] % pi[i]
-    poly_qi.extend(poly_pi)
-    return poly_qi
+    out = poly_qi.copy()
+    out.extend(poly_pi)
+    return out
 
 
 def mod_down_elm(elm_qipi, qipi, qi):
-    out = []
     pi = qipi[-(len(qipi)-len(qi)):]
+    P=1
+    for p in pi:
+        P=P*p
+
+    inv_P_qi = [0] * len(qi)
+    for i in range(len(qi)):
+        P_qi = P % qi[i]
+        inv_P = pow(P_qi, qi[i] - 2, qi[i])
+        inv_P_qi[i] = inv_P
+
+    out = []
     elm_pi = elm_qipi[-len(pi):]
     elm_P = crt_to_coef_elm(elm_pi, pi)
     a_qi = coef_to_crt_elm(elm_P, qi)
