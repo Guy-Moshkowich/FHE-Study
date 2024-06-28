@@ -1,6 +1,7 @@
 from numpy.polynomial import Polynomial
 from Utils import utils
 import random
+from utils import *
 
 random.seed(0)
 n = 8
@@ -92,9 +93,7 @@ def sub(poly1_crt, poly2_crt, primes):
 
 
 def mul(poly1_crt, poly2_crt, primes):
-    M = 1
-    for p in primes:
-        M = M * p
+    M = prod(primes)
     poly1 = Polynomial(crt_to_coef(poly1_crt, primes))
     # print('poly1: ', poly1)
     poly2 = Polynomial(crt_to_coef(poly2_crt, primes))
@@ -136,14 +135,16 @@ def mul_scalar(scalar, poly_crt, primes):
     return out
 
 
-def gen_rand_poly_crt(primes, debug=False):
-    if debug:
-        rnd_poly = coef_to_crt([3,0,0,0,0,0,0,0],primes)
-        print('rnd_poly: ', rnd_poly)
-        return rnd_poly
-    M = 1
-    for p in primes:
-        M = M*p
+def gen_rand_poly_crt(primes):
+    M = prod(primes)
+    # if debug:
+    #     # rnd_poly_coef = [0]*n
+    #     # rnd_poly_coef[0] = 30
+    #     # rnd_poly = coef_to_crt(rnd_poly_coef,primes)
+    #     rnd_poly_coef=[random.randint(0, M) for _ in range(n)]
+    #     rnd_poly = coef_to_crt(rnd_poly_coef, primes)
+    #     return rnd_poly
+
     poly_rand_coef = [random.randint(0, M) for _ in range(n)]
     return coef_to_crt(poly_rand_coef, primes)
 

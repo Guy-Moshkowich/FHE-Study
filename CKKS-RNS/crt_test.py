@@ -48,6 +48,30 @@ class TestCrt(unittest.TestCase):
         exp = [6,0,0,0,0,0,0,0]
         self.assertEqual(crt_to_coef(res, qi), exp)
 
+    def test_mul_minus(self):
+        qi = [97, 101]
+        Q=97*101
+        sk = [9796, 0, 0, 0, 0, 0, 0, 0]
+        A = [7202, 0, 0, 0, 0, 0, 0, 0]
+        sk_qi = coef_to_crt(sk, qi)
+        print('sk_qi: ', sk)
+        A_p=Polynomial(A)
+        print('A_p: ',A_p)
+        sk_p = Polynomial(sk)
+        print('sk_p: ',sk_p)
+        res = modulo(A*sk_p, Q)
+        print('res coef: ', res)
+        print('res qi: ', coef_to_crt(res,qi))
+
+        print(9796*7202%9797)
+
+        A_qi = coef_to_crt(A, qi)
+        print(A_qi)
+        res2 = mul(A_qi, sk_qi, qi)
+        print('res2 qi: ', res2)
+        print('res2 coef: ',crt_to_coef(res2,qi))
+
+
     def test_mul_scalar(self):
         qi = [97, 193]
         poly = coef_to_crt([2, 0, 0, 0, 0, 0, 0, 0], qi)
@@ -118,70 +142,126 @@ class TestCrt(unittest.TestCase):
         exp = [0, 1, 2, 3, 4, 5, 6, 7]
         self.assertEqual(exp, crt_to_coef(poly_qi, qi))
 
+    def test_mod_down_396810(self):
+        qi = [97, 101]
+        scale = 100
+        pi = [103, 107]
+        qipi = [97, 101, 103, 107]
+        poly_coef = [396810]
+        poly_qipi = coef_to_crt(poly_coef, qipi)
+        print(poly_qipi)
+        poly_qi = mod_down(poly_qipi, qipi, qi)
+        print(poly_qi)
+
+    # def test_he_mul_sk_positive_debug_true(self):
+    #     qi = [5, 7]
+    #     pi = [11, 13]
+    #     qipi = [5, 7, 11, 13]
+    #     sk_qi = gen_sk(qi,debug=True)
+    #     sk_qipi = mod_up(sk_qi, qi, pi)
+    #     pt1_qi = coef_to_crt([random.randint(0, 10) for _ in range(n)], qi)
+    #     pt2_qi = coef_to_crt([random.randint(0, 10) for _ in range(n)], qi)
+    #     ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
+    #     ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+    #     relin_key_ax_qipi, relin_key_bx_qipi = gen_relin_key(sk_qipi, qipi, pi)
+    #     res_ax_qi, res_bx_qi = he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, qi, pi)
+    #     res_dec_qi = decrypt(res_ax_qi, res_bx_qi, sk_qi, qi)
+    #     exp = mul(pt1_qi, pt2_qi,qi)
+    #     self.assertEqual(exp, res_dec_qi)
 
 
+    # def test_he_mul_debug(self):
+    #     # qi = [97, 193]
+    #     # scale = 6 #100
+    #     # qipi = [97, 193, 101, 103]
+    #     qi = [5,7]
+    #     pi = [11,13]
+    #     qipi = [5,7,11,13]
+    #     sk_qi = gen_sk(qi, debug=True)
+    #     sk_qipi = mod_up(sk_qi, qi, pi)
+    #     print("sk_qipi: ", sk_qipi)
+    #     print("sk_qi: ", sk_qi)
+    #     print("sk_coef: ", crt_to_coef(sk_qi,qi))
+    #
+    #     pt1_qi = coef_to_crt([10, 0, 0, 0, 0, 0, 0, 0], qi)
+    #     pt2_qi = coef_to_crt([12, 0, 0, 0, 0, 0, 0, 0], qi)
+    #     print("pt1_qi: ", pt1_qi)
+    #     print("pt2_qi: ", pt2_qi)
+    #
+    #     # exp_qi = [0,0,0,scale*scale,0,0,0,0]
+    #     ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
+    #     print(crt_to_coef(decrypt(ax1_qi, bx1_qi, sk_qi, qi),qi))
+    #     ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+    #     print(crt_to_coef(decrypt(ax2_qi, bx2_qi, sk_qi, qi),qi))
+    #
+    #     relin_key_ax_qipi, relin_key_bx_qipi = gen_relin_key(sk_qipi, qipi, pi)
+    #
+    #     res_ax_qi, res_bx_qi = he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi)
+    #     res_dec_qi = decrypt(res_ax_qi, res_bx_qi, sk_qi, qi)
+    #     print('res=', crt_to_coef(res_dec_qi,qi))
+    #     # self.assertEqual(crt_to_coef(res_dec_qi, qi), exp_qi)
 
-    def test_he_mul(self):
+    def test_he_mul_debug2(self):
+        debug_flag = True
 
-        '''
-        import numpy as np
-
-        a = [Q*P-1]
-        b = [Q*P-1]
-        print(a)
-
-        d =np.polymul(a, b)
-        print('d: ', d.tolist())
-        cyc2 = np.poly1d([1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0])
-        quotient, remainder = np.polynomial.polynomial.polydiv(d, cyc2)
-        print('res: ', quotient, remainder.tolist())
-
-        c = utils.modulo_polynomial(Polynomial(a)*Polynomial(b), cyc)
-        print('c: ',c)
-        print('c%97: ',c.coef[0] %97)
-        print('np.poly1d(a): ',np.poly1d(a))
-        cyc2 = np.poly1d([1,0,0,0,0,0,0,0,1])
-        print('cyc2: ')
-        print(cyc2)
-        print('np.poly1d(a)*np.poly1d(b): ')
-        tmp = np.poly1d(a)*np.poly1d(b)
-        print(np.poly1d(a)*np.poly1d(b))
-        quotient, remainder = np.polydiv(d,cyc2)
-        print('res: ', quotient, remainder[0]%97)
-
-        for i, coeff in enumerate(tmp):
-            if abs(coeff) >= 1e10 or abs(coeff) < 1e-10:
-                print(f"Coefficient of x^{remainder.order - i}: {coeff:.22f}")  # Print with 18 decimal places
-            else:
-                print(f"Coefficient of x^{remainder.order - i}: {coeff}")
-        '''
-
-        # qi = [97, 193]
-        # scale = 6 #100
-        # qipi = [97, 193, 101, 103]
-        qi = [5,7]
-        pi = [11,13]
-        qipi = [5,7,11,13]
-        sk_qipi = gen_sk(qipi, debug=True)
-        sk_qi = mod_down(sk_qipi, qipi, qi)
+        qi = [97, 101]
+        Q=prod(qi)
+        scale = 100
+        pi = [103,107]
+        qipi = [97, 101, 103, 107]
+        print('Q=', 97*101)
+        print('P=', 103*107)
+        print('QP=',97*101*103*107)
+        # qipi = [99991,99989,100003,100019]
+        # qi = [99991,99989]
+        # pi = [100003,100019]
+        # scale = 100000
+        sk_qi = gen_sk(qi, debug=debug_flag)
+        sk_qipi = mod_up(sk_qi, qi, pi)
         print("sk_qipi: ", sk_qipi)
         print("sk_qi: ", sk_qi)
-        # pt1_qi = coef_to_crt([0,scale,0,0,0,0,0,0], qi)
-        # pt2_qi = coef_to_crt([0,0,scale,0,0,0,0,0], qi)
-        pt1_qi = coef_to_crt([0, 2, 0, 0, 0, 0, 0, 0], qi)
-        pt2_qi = coef_to_crt([0, 0, 3, 0, 0, 0, 0, 0], qi)
+        print("sk_coef: ", crt_to_coef(sk_qi,qi))
+        # pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
+        # pt2_coef = [0, 0, 300, 0, 0, 0, 0, 0]
+        # pt1_qi = coef_to_crt(pt1_coef, qi)
+        # pt2_qi = coef_to_crt(pt2_coef, qi)
+
+        pt1_qi = gen_rand_poly_crt(qi)
+        pt2_qi = gen_rand_poly_crt(qi)
+        pt1_coef = crt_to_coef(pt1_qi,qi)
+        pt2_coef = crt_to_coef(pt2_qi,qi)
+
         print("pt1_qi: ", pt1_qi)
         print("pt2_qi: ", pt2_qi)
+        print("pt1_coef: ", crt_to_coef(pt1_qi,qi))
+        print("pt2_coef: ", crt_to_coef(pt2_qi,qi))
+        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
+        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+        print('bx1: ', crt_to_coef(bx1_qi, qi))
+        print('bx2: ', crt_to_coef(bx2_qi, qi))
+        print(crt_to_coef(decrypt(ax1_qi, bx1_qi, sk_qi, qi), qi))
+        print(crt_to_coef(decrypt(ax2_qi, bx2_qi, sk_qi, qi),qi))
 
-        # exp_qi = [0,0,0,scale*scale,0,0,0,0]
-        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi, debug=True)
-        # print(crt_to_coef(decrypt(ax1_qi, bx1_qi, sk_qi, qi),qi))
-        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi, debug=True)
-        # print(crt_to_coef(decrypt(ax2_qi, bx2_qi, sk_qi, qi),qi))
+        relin_key_ax_qipi, relin_key_bx_qipi = gen_relin_key(sk_qipi, qipi, pi)
 
-        relin_key_ax_qipi, relin_key_bx_qipi = gen_relin_key(sk_qipi, qi, qipi, debug=True)
-
-        res_ax_qi, res_bx_qi = he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi)
+        res_ax_qi, res_bx_qi = he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, qi, pi,sk_qi,pt1_qi, pt2_qi)
+        print(res_ax_qi,res_ax_qi)
         res_dec_qi = decrypt(res_ax_qi, res_bx_qi, sk_qi, qi)
-        print('res=', crt_to_coef(res_dec_qi,qi))
-        # self.assertEqual(crt_to_coef(res_dec_qi, qi), exp_qi)
+        res_dec_coef = crt_to_coef(res_dec_qi,qi)
+        print('res_dec_qi: ',res_dec_qi)
+        print('res=', res_dec_coef)
+        exp_coef = modulo(Polynomial(pt1_coef)*Polynomial(pt2_coef), Q)
+        exp_coef.extend([0]*(len(res_dec_coef)-len(exp_coef)))
+        print('exp_coef=', exp_coef)
+        error = 10
+        for i in range(len(res_dec_coef)):
+            c = res_dec_coef[i]
+            d = exp_coef[i]
+            if (c>Q/2):
+                c=Q-c
+            if (d>Q/2):
+                d=Q-d
+            assert_cond = abs(c- d)<error
+            if not assert_cond:
+                print(i, c, d)
+            self.assertTrue(assert_cond)
