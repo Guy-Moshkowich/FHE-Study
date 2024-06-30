@@ -1,6 +1,8 @@
 from crt import *
 from utils import *
 
+MAX_NOISE = 2
+
 def gen_sk(primes, debug=False):
     M = prod(primes)
     if debug:
@@ -144,10 +146,16 @@ def he_add(ax1, bx1, ax2, bx2, qi):
     return add(ax1,ax2,qi), add(bx1,bx2,qi)
 
 
-def encrypt(pt_qi, sk_qi, qi):
+def encrypt(pt_qi, sk_qi, qi, debug=False):
+    if debug:
+        noise = [0]*n*len(qi)
+    else:
+        noise = gen_noise_crt(MAX_NOISE, qi)
+    print('noise: ', noise)
     ax_qi = gen_rand_poly_crt(qi)
     ax_time_sk_qi = mul(ax_qi, sk_qi, qi)
     bx_qi = add(ax_time_sk_qi, pt_qi, qi)
+    bx_qi = add(bx_qi, noise,qi)
     return ax_qi, bx_qi
 
 

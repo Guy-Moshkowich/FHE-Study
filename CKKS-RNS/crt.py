@@ -134,6 +134,20 @@ def mul_scalar(scalar, poly_crt, primes):
             out[idx] = (poly_crt[idx]*scalar) % primes[j]
     return out
 
+def gen_noise_crt(max_noise, primes):
+    poly_rand_coef = []
+    for _ in range(n):
+        if random.randint(0,10) > 8:
+            poly_rand_coef.append(1)
+            # if random.randint(0,1) ==1:
+            #     poly_rand_coef.append(1)
+            # else:
+            #     poly_rand_coef.append(-1)
+        else:
+            poly_rand_coef.append(0)
+    # poly_rand_coef = [random.randint(0, max_noise + 1) for _ in range(n)]
+    return coef_to_crt(poly_rand_coef, primes)
+
 
 def gen_rand_poly_crt(primes):
     M = prod(primes)

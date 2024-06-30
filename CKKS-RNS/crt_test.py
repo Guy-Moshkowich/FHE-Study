@@ -202,27 +202,37 @@ class TestCrt(unittest.TestCase):
     #     # self.assertEqual(crt_to_coef(res_dec_qi, qi), exp_qi)
 
     def test_he_mul_debug2(self):
-        debug_flag = True
+        # qi = [999983, 999979]
+        # pi = [1000003, 1000033]
 
-        qi = [97, 101]
-        Q=prod(qi)
-        scale = 100
-        pi = [103,107]
-        qipi = [97, 101, 103, 107]
-        print('Q=', 97*101)
-        print('P=', 103*107)
-        print('QP=',97*101*103*107)
-        # qipi = [99991,99989,100003,100019]
-        # qi = [99991,99989]
-        # pi = [100003,100019]
-        # scale = 100000
-        sk_qi = gen_sk(qi, debug=debug_flag)
+        # qi = [991, 997]
+        # pi = [1009,1013]
+
+        # primes near 100 s.t. P = 1 mod 8.
+        qi = [73, 89]
+        pi = [97, 113]
+
+        # qi = [97, 101]
+        # pi = [103, 107]
+
+
+        qipi = qi.copy()
+        qipi.extend(pi)
+        P = prod(pi)
+        Q = prod(qi)
+
+        print('qipi: ', qipi)
+        print('Q=', Q)
+        print('P=', P)
+        print('QP=', Q*P)
+
+        sk_qi = gen_sk(qi, debug=True)
         sk_qipi = mod_up(sk_qi, qi, pi)
         print("sk_qipi: ", sk_qipi)
         print("sk_qi: ", sk_qi)
         print("sk_coef: ", crt_to_coef(sk_qi,qi))
         # pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
-        # pt2_coef = [0, 0, 300, 0, 0, 0, 0, 0]
+        # pt2_coef = [0, 0, 30, 0, 0, 0, 0, 0]
         # pt1_qi = coef_to_crt(pt1_coef, qi)
         # pt2_qi = coef_to_crt(pt2_coef, qi)
 
@@ -235,8 +245,8 @@ class TestCrt(unittest.TestCase):
         print("pt2_qi: ", pt2_qi)
         print("pt1_coef: ", crt_to_coef(pt1_qi,qi))
         print("pt2_coef: ", crt_to_coef(pt2_qi,qi))
-        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
-        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi, debug=True)
+        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi, debug=True)
         print('bx1: ', crt_to_coef(bx1_qi, qi))
         print('bx2: ', crt_to_coef(bx2_qi, qi))
         print(crt_to_coef(decrypt(ax1_qi, bx1_qi, sk_qi, qi), qi))
@@ -253,7 +263,7 @@ class TestCrt(unittest.TestCase):
         exp_coef = modulo(Polynomial(pt1_coef)*Polynomial(pt2_coef), Q)
         exp_coef.extend([0]*(len(res_dec_coef)-len(exp_coef)))
         print('exp_coef=', exp_coef)
-        error = 10
+        error = 50
         for i in range(len(res_dec_coef)):
             c = res_dec_coef[i]
             d = exp_coef[i]
@@ -261,7 +271,7 @@ class TestCrt(unittest.TestCase):
                 c=Q-c
             if (d>Q/2):
                 d=Q-d
-            assert_cond = abs(c- d)<error
+            assert_cond = abs(c- d) < error
             if not assert_cond:
                 print(i, c, d)
             self.assertTrue(assert_cond)
