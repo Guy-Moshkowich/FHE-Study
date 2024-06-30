@@ -108,6 +108,7 @@ def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi, sk_q
     B = bx1_dbg * bx2_dbg + ax1_dbg*ax2_dbg * relin_bx_dbg/P_dbg
     print('B= b1*b2 + a1*a2*b4/P', modulo(B, Q_dbg))
     A = ax1_dbg*bx2_dbg + ax2_dbg*bx1_dbg + ax1_dbg*ax2_dbg*relin_ax_dbg/P_dbg
+    print('A: ', A)
     print('A= a1*b2 + a2*b1 + a1*a2*a4/P', modulo(A, Q_dbg))
     print('B-A*sk: ', modulo(B - A*sk_dbg, Q_dbg) )
     print('A*sk: ', modulo(A * sk_dbg, Q_dbg))
