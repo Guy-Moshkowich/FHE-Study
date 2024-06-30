@@ -1,6 +1,7 @@
 import unittest
 from scheme import *
 
+
 class TestCrt(unittest.TestCase):
 
     def test_crt_to_coef(self):
@@ -42,11 +43,30 @@ class TestCrt(unittest.TestCase):
 
     def test_mul(self):
         qi = [97, 193]
-        tmp1 = coef_to_crt([2, 0, 0, 0, 0, 0, 0, 0], qi)
-        tmp2 = coef_to_crt([3, 0, 0, 0, 0, 0, 0, 0], qi)
+        tmp1 = coef_to_crt([0, 2, 0, 0, 0, 0, 0, 0], qi)
+        tmp2 = coef_to_crt([0, 0, 3, 0, 0, 0, 0, 0], qi)
         res = mul(tmp1, tmp2, qi)
-        exp = [6,0,0,0,0,0,0,0]
+        exp = [0,0,0,6,0,0,0,0]
         self.assertEqual(crt_to_coef(res, qi), exp)
+
+    # def test_mul2(self):
+    #     qi = [97, 113]
+    #     tmp1 = coef_to_crt([0, 2, 0, 0, 0, 0, 0, 0], qi)
+    #     tmp2 = coef_to_crt([0, 0, 3, 0, 0, 0, 0, 0], qi)
+    #     res = mul2(tmp1, tmp2, qi)
+    #     print(res)
+    #     print(mul(tmp1, tmp2, qi))
+    #     exp = [0,0,0,6,0,0,0,0]
+    #     self.assertEqual(crt_to_coef(res, qi), exp)
+
+    # def test_mul2_random_poly(self):
+    #     qi = [97, 193]
+    #     poly1 = gen_rand_poly_crt(qi)
+    #     poly2 = gen_rand_poly_crt(qi)
+    #     res = mul2(poly1, poly2, qi)
+    #     exp = mul(poly1 , poly2, qi)
+    #     self.assertEqual(res, exp)
+
 
     def test_mul_minus(self):
         qi = [97, 101]
@@ -91,10 +111,12 @@ class TestCrt(unittest.TestCase):
         self.assertEqual(poly_qipi, exp)
 
     def test_gen_relin_key(self):
-        pi = [101,103]
-        qipi = [97,193,101,103]
-        P = 101*103
-        sk_qipi = gen_sk(qipi)
+        qi = [1009, 1153]
+        pi = [1201, 1217]
+        qipi = qi.copy()
+        qipi.extend(pi)
+        P = prod(pi)
+        sk_qipi = gen_sk(qipi, debug=Debug.POSITIVE_SK)
         relin_key_ax, relin_key_bx  = gen_relin_key(sk_qipi, qipi, pi)
         sk_sqr_qipi = mul(sk_qipi,sk_qipi,qipi)
         sk_sqr_times_p_qipi = mul_scalar(P, sk_sqr_qipi, qipi)
@@ -104,20 +126,20 @@ class TestCrt(unittest.TestCase):
 
     def test_enc_dec(self):
         qi = [97, 193]
-        sk_qi = gen_sk(qi)
+        sk_qi = gen_sk(qi,Debug.POSITIVE_SK)
         pt_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
-        ax_qi, bx_qi = encrypt(pt_qi, sk_qi, qi)
+        ax_qi, bx_qi = encrypt(pt_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
         pt_dec_qi = decrypt(ax_qi, bx_qi, sk_qi, qi)
         self.assertEqual(pt_dec_qi, pt_qi)
 
     def test_he_add(self):
         qi = [97, 193]
-        sk_qi = gen_sk(qi)
+        sk_qi = gen_sk(qi,Debug.POSITIVE_SK)
         pt1_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
         pt2_qi = coef_to_crt([9, 10, 11, 12, 13, 14, 15, 16], qi)
         exp_qi = [10, 12, 14, 16, 18, 20, 22, 24]
-        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi)
-        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi)
+        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
+        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
         res_ax, res_bx = he_add(ax1_qi, bx1_qi,ax2_qi, bx2_qi, qi)
         res_dec_qi = decrypt(res_ax, res_bx, sk_qi, qi)
         self.assertEqual(crt_to_coef(res_dec_qi,qi), exp_qi)
@@ -205,16 +227,15 @@ class TestCrt(unittest.TestCase):
         # qi = [999983, 999979]
         # pi = [1000003, 1000033]
 
-        # qi = [991, 997]
-        # pi = [1009,1013]
+        # qi = [1009, 1153]
+        # pi = [1201, 1217]
 
-        # primes near 100 s.t. P = 1 mod 8.
-        qi = [73, 89]
-        pi = [97, 113]
+        qi = [97, 101]
+        pi = [103, 107]
 
-        # qi = [97, 101]
-        # pi = [103, 107]
-
+        # primes near 100 s.t. P = 1 mod 16
+        # qi = [97, 113]
+        # pi = [183, 241]
 
         qipi = qi.copy()
         qipi.extend(pi)
@@ -226,11 +247,12 @@ class TestCrt(unittest.TestCase):
         print('P=', P)
         print('QP=', Q*P)
 
-        sk_qi = gen_sk(qi, debug=True)
+        sk_qi = gen_sk(qi, Debug.POSITIVE_SK)
         sk_qipi = mod_up(sk_qi, qi, pi)
         print("sk_qipi: ", sk_qipi)
         print("sk_qi: ", sk_qi)
-        print("sk_coef: ", crt_to_coef(sk_qi,qi))
+        print("sk_coef: ", crt_to_coef(sk_qi, qi))
+
         # pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
         # pt2_coef = [0, 0, 30, 0, 0, 0, 0, 0]
         # pt1_qi = coef_to_crt(pt1_coef, qi)
@@ -245,8 +267,8 @@ class TestCrt(unittest.TestCase):
         print("pt2_qi: ", pt2_qi)
         print("pt1_coef: ", crt_to_coef(pt1_qi,qi))
         print("pt2_coef: ", crt_to_coef(pt2_qi,qi))
-        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi, debug=True)
-        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi, debug=True)
+        ax1_qi, bx1_qi = encrypt(pt1_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
+        ax2_qi, bx2_qi = encrypt(pt2_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
         print('bx1: ', crt_to_coef(bx1_qi, qi))
         print('bx2: ', crt_to_coef(bx2_qi, qi))
         print(crt_to_coef(decrypt(ax1_qi, bx1_qi, sk_qi, qi), qi))
@@ -275,3 +297,14 @@ class TestCrt(unittest.TestCase):
             if not assert_cond:
                 print(i, c, d)
             self.assertTrue(assert_cond)
+
+    def test_ntt_multiplication(self):
+        # precondition: p mod 2n =1, 17 mod 8 =1
+        n = 8
+        p = 1009
+        a = [0,1,0,0,0,0,0,0] # x
+        b = [0,0,1,0,0,0,0,0] # x^2
+        ntt_a = utils.ntt(n, p, a)
+        ntt_b = utils.ntt(n, p, b)
+        actual = [ntt_a[i]*ntt_b[i] % p for i in range(len(a))]
+        self.assertEqual([0,0,0,1,0,0,0,0], utils.inv_ntt(n,p,actual))

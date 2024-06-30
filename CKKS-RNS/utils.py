@@ -1,5 +1,8 @@
-from numpy.polynomial import Polynomial
+from enum import Enum, auto
 
+class Debug(Enum):
+    DISABLE_NOISE = 2
+    POSITIVE_SK = 4
 
 def prod(vec):
     out = 1

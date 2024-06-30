@@ -3,9 +3,9 @@ from utils import *
 
 MAX_NOISE = 2
 
-def gen_sk(primes, debug=False):
+def gen_sk(primes, debug=0):
     M = prod(primes)
-    if debug:
+    if debug == Debug.POSITIVE_SK:
         print('M: ',M)
         # sk_coef = [0] * n
         # sk_coef[0] =  M - 1
@@ -13,8 +13,7 @@ def gen_sk(primes, debug=False):
         sk = coef_to_crt([random.choice([0, 1]) for _ in range(n)], primes)
         print('sk_debug: ', sk)
         return sk
-    # sk_coef = [random.choice([M-1, 0, 1]) for _ in range(n)]
-    sk_coef = [random.choice([0, 1]) for _ in range(n)]
+    sk_coef = [random.choice([0, -1, 1]) for _ in range(n)]
     return coef_to_crt(sk_coef, primes)
 
 
@@ -59,7 +58,9 @@ def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi, sk_q
     print('-----')
 
     d2_qi = mul(ax1, ax2, qi)
-    print('d2: ', crt_to_coef(d2_qi,qi))
+    print('d2_qi: ', d2_qi)
+    print('d2_qi_mul: ', mul(ax1, ax2, qi))
+    print('d2_coef: ', crt_to_coef(d2_qi,qi))
     print('a1*a2: ', modulo(ax1_dbg*ax2_dbg, Q_dbg))
     print('a1 mod Q: ', modulo(ax1_dbg, Q_dbg))
     print('a2 mod Q: ', modulo(ax2_dbg, Q_dbg))
@@ -81,8 +82,12 @@ def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi, sk_q
     print('d2*relin_a: ', modulo(d2_dbg*relin_ax_dbg,QP_dbg))
     print('-----')
 
-    d2_time_evk_bx_qipi = mul(d2_qipi, relin_key_bx_qipi, qipi)
-    print('d2_time_evk_bx_qipi: ', crt_to_coef(d2_time_evk_bx_qipi, qipi))
+    # d2_time_evk_bx_qipi = mul(d2_qipi, relin_key_bx_qipi, qipi)
+    # d2_time_evk_bx_qipi_tmp = mul(d2_qipi, relin_key_bx_qipi, qipi)
+    # print('d2_time_evk_bx_qipi: ', d2_time_evk_bx_qipi)
+    # print('d2_time_evk_bx_qipi_tmp: ', d2_time_evk_bx_qipi_tmp)
+
+    # print('d2_time_evk_bx_qipi: ', crt_to_coef(d2_time_evk_bx_qipi, qipi))
     print('d2*relin_b: ', modulo(d2_dbg*relin_bx_dbg, QP_dbg))
 
     print('-----')
@@ -97,12 +102,12 @@ def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi, sk_q
 
 
 
-    d2_time_evk_bx_qi = mod_down(d2_time_evk_bx_qipi, qipi, qi)
-    print('d2*b4 mod QP: ', crt_to_coef(d2_time_evk_bx_qipi, qipi))
-    print('d2*b4 mod QP / P: ', [int(x / P_dbg) for x in crt_to_coef(d2_time_evk_bx_qipi, qipi)])
-    print('d2*b4 mod Q: ', crt_to_coef(d2_time_evk_bx_qi, qi))
-    print('d2*b4 / P: ', [int(x/P_dbg) for x in modulo(d2_dbg*relin_bx_dbg, QP_dbg)])
-    print('a1*a2*b4/P mod Q: ', modulo(ax1_dbg * ax2_dbg * relin_bx_dbg/P_dbg, Q_dbg))
+    # d2_time_evk_bx_qi = mod_down(d2_time_evk_bx_qipi, qipi, qi)
+    # print('d2*b4 mod QP: ', crt_to_coef(d2_time_evk_bx_qipi, qipi))
+    # print('d2*b4 mod QP / P: ', [int(x / P_dbg) for x in crt_to_coef(d2_time_evk_bx_qipi, qipi)])
+    # print('d2*b4 mod Q: ', crt_to_coef(d2_time_evk_bx_qi, qi))
+    # print('d2*b4 / P: ', [int(x/P_dbg) for x in modulo(d2_dbg*relin_bx_dbg, QP_dbg)])
+    # print('a1*a2*b4/P mod Q: ', modulo(ax1_dbg * ax2_dbg * relin_bx_dbg/P_dbg, Q_dbg))
 
     tmp = bx1_dbg * bx2_dbg + ax1_dbg*ax2_dbg * relin_bx_dbg/P_dbg - sk_dbg*(ax1_dbg*bx2_dbg + ax2_dbg*bx1_dbg + ax1_dbg*ax2_dbg*relin_ax_dbg/P_dbg)
     print('m1*m2 = b1*b2 + a1*a2*b4/P - sk*(a1*b2 + a2*b1 + a1*a2*a4/P) mod Q:', modulo(tmp,Q_dbg))
@@ -116,8 +121,12 @@ def he_mul(ax1, bx1, ax2, bx2, relin_key_ax_qipi, relin_key_bx_qipi, qi,pi, sk_q
     print('A*sk: ', modulo(A * sk_dbg, Q_dbg))
     print('A*sk mod qi: ', coef_to_crt(modulo(A * sk_dbg, Q_dbg), qi))
     print('-----')
+    print('mul(d2_qipi,relin_key_bx_qipi,qipi): ', mul(d2_qipi, relin_key_bx_qipi, qipi))
     B2 = add(d0_qi, mod_down(mul(d2_qipi,relin_key_bx_qipi,qipi),qipi,qi),qi)
+
     print('B2: ', crt_to_coef(B2, qi))
+    print('B2_qi: ', B2)
+    # print('B2_qi_tmp: ', B2_tmp)
     A2 = add(add(mul(ax1,bx2,qi),mul(ax2,bx1,qi),qi),mod_down(mul(d2_qipi,relin_key_ax_qipi,qipi),qipi,qi),qi)
     print('A2=',crt_to_coef(A2,qi))
     print('B2_qi-A2_qi*sk_qi: ', crt_to_coef(sub(B2,mul(A2,sk_qi_dbg,qi), qi),qi))
@@ -146,8 +155,8 @@ def he_add(ax1, bx1, ax2, bx2, qi):
     return add(ax1,ax2,qi), add(bx1,bx2,qi)
 
 
-def encrypt(pt_qi, sk_qi, qi, debug=False):
-    if debug:
+def encrypt(pt_qi, sk_qi, qi, debug=0):
+    if debug == Debug.DISABLE_NOISE:
         noise = [0]*n*len(qi)
     else:
         noise = gen_noise_crt(MAX_NOISE, qi)

@@ -46,9 +46,7 @@ def crt_to_coef(poly_crt, primes):
 
 
 def crt_to_coef_elm(crt_elm, primes):
-    M = 1
-    for p in primes:
-        M = M * p
+    M = prod(primes)
     out = 0
     for j in range(len(crt_elm)):
         out = out + crt_elm[j]*qi_hat(j,primes)*inv_qi_hat(j,primes)
@@ -101,6 +99,19 @@ def mul(poly1_crt, poly2_crt, primes):
     mul_mod_cyc = utils.modulo_polynomial(poly1*poly2.coef, cyc).coef
     mul_mod_cyc_mod_q = [int(x) % M for x in mul_mod_cyc]
     return coef_to_crt(mul_mod_cyc_mod_q, primes)
+
+
+
+# def mul2(poly1_crt, poly2_crt, primes):
+#     out = []
+#     for i in range(len(primes)):
+#         x = utils.ntt(n, primes[i], poly1_crt[i*n:i*n+n])
+#         y = utils.ntt(n,primes[i], poly2_crt[i*n:i*n+n])
+#         ntt_res = [x[j] * y[j] % primes[i] for j in range(n)]
+#         res_i = [(x % primes[i]) for x in utils.inv_ntt(n, primes[i], ntt_res)]
+#         out.extend(res_i)
+#     return out
+
 
 # def mul2(poly1_crt, poly2_crt, primes):
 #     M = 1
