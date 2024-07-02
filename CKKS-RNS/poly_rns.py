@@ -5,21 +5,25 @@ from utils import *
 
 random.seed(0)
 n = 8
-# qi = [97, 193]
-# pi = [101,103]
-# qipi = [97,193,101,103]
-# Q = 97*193
-# P = 101*103
-
-# qi = [3,5]
-# pi = [7,11]
-# qipi = [3,5,7,11]
-# Q = 3*5
-# P = 7*11
-
-
 cyc = Polynomial([1,0,0,0,0,0,0,0,1])
 
+
+class Evaluator:
+    def __init__(self, n, primes):
+        self.n = n
+        self.primes = primes
+        self.ntt_mat = {p:utils.ntt_matrix(n, p) for p in primes}
+        self.inv_ntt_mat = {p: utils.inv_ntt_matrix(n, p) for p in primes}
+
+    def mul(self, poly1_crt, poly2_crt, primes):
+        out = []
+        for i in range(len(primes)):
+            x = utils.ntt_mat(primes[i], poly1_crt[i*n:i*n+n], self.ntt_mat[primes[i]])
+            y = utils.ntt_mat(primes[i], poly2_crt[i*n:i*n+n], self.ntt_mat[primes[i]])
+            ntt_res = [x[j] * y[j] % primes[i] for j in range(n)]
+            res_i = [(x % primes[i]) for x in utils.inv_ntt_mat(primes[i], ntt_res, self.inv_ntt_mat[primes[i]])]
+            out.extend(res_i)
+        return out
 
 
 def coef_to_crt(poly_coef, primes):
@@ -29,9 +33,6 @@ def coef_to_crt(poly_coef, primes):
             idx = j*n+i
             crt[idx] = poly_coef[i] % primes[j]
     return crt
-
-
-
 
 
 def crt_to_coef(poly_crt, primes):
@@ -90,53 +91,6 @@ def sub(poly1_crt, poly2_crt, primes):
     return out_crt
 
 
-def mul(poly1_crt, poly2_crt, primes):
-    M = prod(primes)
-    poly1 = Polynomial(crt_to_coef(poly1_crt, primes))
-    # print('poly1: ', poly1)
-    poly2 = Polynomial(crt_to_coef(poly2_crt, primes))
-    # mul_poly_mod = Polynomial([int(x) % M for x in poly1*poly2.coef])
-    mul_mod_cyc = utils.modulo_polynomial(poly1*poly2.coef, cyc).coef
-    mul_mod_cyc_mod_q = [int(x) % M for x in mul_mod_cyc]
-    return coef_to_crt(mul_mod_cyc_mod_q, primes)
-
-
-
-# def mul2(poly1_crt, poly2_crt, primes):
-#     out = []
-#     for i in range(len(primes)):
-#         x = utils.ntt(n, primes[i], poly1_crt[i*n:i*n+n])
-#         y = utils.ntt(n,primes[i], poly2_crt[i*n:i*n+n])
-#         ntt_res = [x[j] * y[j] % primes[i] for j in range(n)]
-#         res_i = [(x % primes[i]) for x in utils.inv_ntt(n, primes[i], ntt_res)]
-#         out.extend(res_i)
-#     return out
-
-
-# def mul2(poly1_crt, poly2_crt, primes):
-#     M = 1
-#     for p in primes:
-#         M = M * p
-#     p1 = crt_to_coef(poly1_crt, primes)
-#     p1.reverse()
-#     poly1 = np.poly1d(p1)
-#     print('poly1: ', poly1)
-#     p2 = crt_to_coef(poly2_crt, primes)
-#     p2.reverse()
-#     poly2 = np.poly1d(p2)
-#     mul_res = poly1*poly2
-#     _, remainder = np.divmod(poly1*poly2, cyc)
-#     # mul_poly = poly1*poly2
-#     r = remainder.tolist()
-#     r.reverse()
-#     # mul_poly_mod = Polynomial([int(x) % M for x in remainder.coef])
-#     mul_mod_cyc_mod_q = [int(x) % M for x in r]
-#
-#
-#     # mul_mod_cyc = utils.modulo_polynomial(mul_poly_mod, cyc).coef
-#     # mul_mod_cyc_mod_q = [int(x) % M for x in mul_mod_cyc]
-#     return coef_to_crt(mul_mod_cyc_mod_q, primes)
-
 def mul_scalar(scalar, poly_crt, primes):
     out = [0]*n*len(primes)
     for i in range(n):
@@ -188,9 +142,9 @@ def mod_up(poly_qi, qi, pi):
 
 def mod_down_elm(elm_qipi, qipi, qi):
     pi = qipi[-(len(qipi)-len(qi)):]
-    P=1
+    P = 1
     for p in pi:
-        P=P*p
+        P = P*p
 
     inv_P_qi = [0] * len(qi)
     for i in range(len(qi)):
@@ -206,6 +160,7 @@ def mod_down_elm(elm_qipi, qipi, qi):
         b_qi = elm_qipi[i]
         out.append(((b_qi - a_qi[i]) * inv_P_qi[i]) %qi[i])
     return out
+
 
 def mod_down(poly_qipi, qipi, qi):
     out = [0]*n*len(qi)

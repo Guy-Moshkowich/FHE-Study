@@ -241,7 +241,10 @@ def generate_primitive_root_of_unity(n: int, p: int)-> int:
     assert p % n == 1 # n|p-1 <=> p-1=0 mod n <=> p=1 mod n
     assert is_power_2(n)
     for x in range (2, p-1):
-        if ((x ** n) % p == 1) and ((x ** (n - 1)) % p != 1):
+        i = 2
+        while (x ** i) % p != 1:
+            i = i + 1
+        if i == n:
             return x
     assert 1 == 0 # we should not get here.
 
@@ -288,33 +291,39 @@ def inv_special_fft(n: int, a: typing.List[complex]) -> Polynomial:
 
 
 def ntt_matrix(n: int, p: int):
-    x = generate_primitive_root_of_unity(2*n, p)
-    roots = [x**i for i in get_units(2*n)]
+    w = generate_primitive_root_of_unity(2*n, p)
+    roots = [w**i for i in get_units(2*n)]
     mat = []
     for root in roots:
         row = [(root ** k) % p for k in range(0, n)]
         mat.append(row)
     return mat
 
+def ntt_mat(p:int, a: typing.List[int], ntt_mat)->typing.List[int]:
+    vec = np.array(a)
+    mat_mul = np.array(ntt_mat).dot(vec)
+    return [(mat_mul[i] % p) for i in range(len(mat_mul))]
+
 
 def ntt(n: int, p:int, a: typing.List[int])->typing.List[int]:
     mat = np.array(ntt_matrix(n, p))
-    # a.extend([0 for i in range(n // 2 - len(a))])  # padding with 0
+    return ntt_mat(p, a, mat)
+
+
+def inv_ntt_mat(p:int, a: typing.List[int], inv_ntt_mat)->typing.List[int]:
     vec = np.array(a)
-    mat_mul = mat.dot(vec)
-    return [(mat_mul[i] % p) for i in range(len(mat_mul))]
+    vec_res = np.array(inv_ntt_mat).dot(vec)
+    res = [0] * len(vec_res)
+    for i in range(len(vec_res)):
+        res[i] = (vec_res[i] % p)
+        if res[i] > p // 2:
+            res[i] = res[i] - p
+    return res
 
 
 def inv_ntt(n: int, p:int, a: typing.List[int])->typing.List[int]:
     mat = np.array(inv_ntt_matrix(n, p))
-    vec = np.array(a)
-    vec_res = mat.dot(vec)
-    res = [0]*len(vec_res)
-    for i in range(len(vec_res)):
-        res[i] = (vec_res[i] % p)
-        if res[i] > p//2:
-            res[i] = res[i]-p
-    return res
+    return inv_ntt_mat(p, a, mat)
 
 
 def inv(x: int, p: int)->int:
