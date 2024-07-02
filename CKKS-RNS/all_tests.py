@@ -3,7 +3,7 @@ from scheme import *
 
 qi = [1009, 1153]
 pi = [1201, 1217]
-scheme_1000 = Scheme(n, qi, pi)
+scheme_common = Scheme(n, qi, pi)
 
 
 class TestCrt(unittest.TestCase):
@@ -101,42 +101,38 @@ class TestCrt(unittest.TestCase):
         self.assertEqual(poly_qipi, exp)
 
     def test_gen_relin_key(self):
-        # qi = [1009, 1153]
-        # pi = [1201, 1217]
-        # scheme = Scheme(n, qi, pi)
-
         qipi = qi.copy()
         qipi.extend(pi)
         P = prod(pi)
-        sk_qipi = scheme_1000.gen_sk(qipi, debug=Debug.POSITIVE_SK)
-        relin_key_ax, relin_key_bx  = scheme_1000.gen_relin_key(sk_qipi, qipi, pi)
-        sk_sqr_qipi = scheme_1000.polyEval.mul(sk_qipi, sk_qipi, qipi)
-        sk_sqr_times_p_qipi = mul_scalar(P, sk_sqr_qipi, qipi)
-        # ax_times_sk_qipi = mul2(relin_key_ax, sk_qipi, qipi)
-        ax_times_sk_qipi = scheme_1000.polyEval.mul(relin_key_ax, sk_qipi, qipi)
-        res = sub(relin_key_bx, ax_times_sk_qipi , qipi)
+        sk_qipi = mod_up(scheme_common.sk_qi, scheme_common.qi, scheme_common.pi)
+        relin_key_ax = scheme_common.relin_key_ax_qipi
+        relin_key_bx = scheme_common.relin_key_bx_qipi
+        sk_sqr_qipi = scheme_common.polyEval.mul(sk_qipi, sk_qipi, scheme_common.qipi)
+        sk_sqr_times_p_qipi = mul_scalar(P, sk_sqr_qipi, scheme_common.qipi)
+        ax_times_sk_qipi = scheme_common.polyEval.mul(relin_key_ax, sk_qipi, scheme_common.qipi)
+        res = sub(relin_key_bx, ax_times_sk_qipi , scheme_common.qipi)
         self.assertEqual(sk_sqr_times_p_qipi, res) # relin encrypts P*sk^2
 
     def test_enc_dec(self):
         qi = [97, 193]
         scheme = Scheme(n, qi)
-        sk_qi = scheme.gen_sk(qi,Debug.POSITIVE_SK)
+        # sk_qi = scheme.gen_sk(Debug.POSITIVE_SK)
         pt_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
-        ax_qi, bx_qi = scheme.encrypt(pt_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
-        pt_dec_qi = scheme.decrypt(ax_qi, bx_qi, sk_qi, qi)
+        ax_qi, bx_qi = scheme.encrypt(pt_qi, debug=Debug.DISABLE_NOISE)
+        pt_dec_qi = scheme.decrypt(ax_qi, bx_qi)
         self.assertEqual(pt_dec_qi, pt_qi)
 
     def test_he_add(self):
         qi = [97, 193]
         scheme = Scheme(n, qi)
-        sk_qi = scheme.gen_sk(qi,Debug.POSITIVE_SK)
+        sk_qi = scheme.gen_sk(Debug.POSITIVE_SK)
         pt1_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
         pt2_qi = coef_to_crt([9, 10, 11, 12, 13, 14, 15, 16], qi)
         exp_qi = [10, 12, 14, 16, 18, 20, 22, 24]
-        ax1_qi, bx1_qi = scheme.encrypt(pt1_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
-        ax2_qi, bx2_qi = scheme.encrypt(pt2_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
-        res_ax, res_bx = scheme.he_add(ax1_qi, bx1_qi,ax2_qi, bx2_qi, qi)
-        res_dec_qi = scheme.decrypt(res_ax, res_bx, sk_qi, qi)
+        ax1_qi, bx1_qi = scheme.encrypt(pt1_qi,  debug=Debug.DISABLE_NOISE)
+        ax2_qi, bx2_qi = scheme.encrypt(pt2_qi,  debug=Debug.DISABLE_NOISE)
+        res_ax, res_bx = scheme.he_add(ax1_qi, bx1_qi,ax2_qi, bx2_qi)
+        res_dec_qi = scheme.decrypt(res_ax, res_bx)
         self.assertEqual(crt_to_coef(res_dec_qi,qi), exp_qi)
 
     def test_mod_down_elm(self):
@@ -160,35 +156,14 @@ class TestCrt(unittest.TestCase):
         self.assertEqual(exp, crt_to_coef(poly_qi, qi))
 
     def test_he_mul(self):
-        # qi = [999983, 999979]
-        # pi = [1000003, 1000033]
-
-        qi = [1009, 1153]
-        pi = [1201, 1217]
-        # scheme = Scheme(n, qi, pi)
-
-        # qi = [97, 101]
-        # pi = [103, 107]
-
-        # primes near 100 s.t. P = 1 mod 16
-        # pi = [97, 113]
-        # qi = [183, 241]
-
         qipi = qi.copy()
         qipi.extend(pi)
         P = prod(pi)
         Q = prod(qi)
 
-        print('qipi: ', qipi)
-        print('Q=', Q)
-        print('P=', P)
-        print('QP=', Q*P)
-
-        sk_qi = scheme_1000.gen_sk(qi, Debug.POSITIVE_SK)
-        sk_qipi = mod_up(sk_qi, qi, pi)
-        print("sk_qipi: ", sk_qipi)
-        print("sk_qi: ", sk_qi)
-        print("sk_coef: ", crt_to_coef(sk_qi, qi))
+        # print("sk_qipi: ", sk_qipi)
+        # print("sk_qi: ", sk_qi)
+        # print("sk_coef: ", crt_to_coef(sk_qi, qi))
 
         # pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
         # pt2_coef = [0, 0, 30, 0, 0, 0, 0, 0]
@@ -204,22 +179,21 @@ class TestCrt(unittest.TestCase):
         print("pt2_qi: ", pt2_qi)
         print("pt1_coef: ", crt_to_coef(pt1_qi,qi))
         print("pt2_coef: ", crt_to_coef(pt2_qi,qi))
-        ax1_qi, bx1_qi = scheme_1000.encrypt(pt1_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
-        ax2_qi, bx2_qi = scheme_1000.encrypt(pt2_qi, sk_qi, qi, debug=Debug.DISABLE_NOISE)
+        ax1_qi, bx1_qi = scheme_common.encrypt(pt1_qi, debug=Debug.DISABLE_NOISE)
+        ax2_qi, bx2_qi = scheme_common.encrypt(pt2_qi, debug=Debug.DISABLE_NOISE)
         print('bx1: ', crt_to_coef(bx1_qi, qi))
         print('bx2: ', crt_to_coef(bx2_qi, qi))
-        print(crt_to_coef(scheme_1000.decrypt(ax1_qi, bx1_qi, sk_qi, qi), qi))
-        print(crt_to_coef(scheme_1000.decrypt(ax2_qi, bx2_qi, sk_qi, qi), qi))
-
-        relin_key_ax_qipi, relin_key_bx_qipi = scheme_1000.gen_relin_key(sk_qipi, qipi, pi)
-
-        res_ax_qi, res_bx_qi = scheme_1000.he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, qi, pi, sk_qi, pt1_qi, pt2_qi)
+        print(crt_to_coef(scheme_common.decrypt(ax1_qi, bx1_qi), qi))
+        print(crt_to_coef(scheme_common.decrypt(ax2_qi, bx2_qi), qi))
+        relin_key_ax_qipi = scheme_common.relin_key_ax_qipi
+        relin_key_bx_qipi = scheme_common.relin_key_bx_qipi
+        res_ax_qi, res_bx_qi = scheme_common.he_mul(ax1_qi, bx1_qi, ax2_qi, bx2_qi, relin_key_ax_qipi, relin_key_bx_qipi, scheme_common.sk_qi, pt1_qi, pt2_qi)
         print(res_ax_qi,res_ax_qi)
-        res_dec_qi = scheme_1000.decrypt(res_ax_qi, res_bx_qi, sk_qi, qi)
+        res_dec_qi = scheme_common.decrypt(res_ax_qi, res_bx_qi)
         res_dec_coef = crt_to_coef(res_dec_qi,qi)
         print('res_dec_qi: ',res_dec_qi)
         print('res=', res_dec_coef)
-        exp_coef = scheme_1000.modulo(Polynomial(pt1_coef) * Polynomial(pt2_coef), Q)
+        exp_coef = scheme_common.modulo(Polynomial(pt1_coef) * Polynomial(pt2_coef), Q)
         exp_coef.extend([0]*(len(res_dec_coef)-len(exp_coef)))
         print('exp_coef=', exp_coef)
         error = 50
@@ -234,14 +208,3 @@ class TestCrt(unittest.TestCase):
             if not assert_cond:
                 print(i, c, d)
             self.assertTrue(assert_cond)
-
-    def test_ntt_multiplication(self):
-        # precondition: p mod 2n =1, 17 mod 8 =1
-        n = 8
-        p = 1009
-        a = [0,1,0,0,0,0,0,0] # x
-        b = [0,0,1,0,0,0,0,0] # x^2
-        ntt_a = utils.ntt(n, p, a)
-        ntt_b = utils.ntt(n, p, b)
-        actual = [ntt_a[i]*ntt_b[i] % p for i in range(len(a))]
-        self.assertEqual([0,0,0,1,0,0,0,0], utils.inv_ntt(n,p,actual))
