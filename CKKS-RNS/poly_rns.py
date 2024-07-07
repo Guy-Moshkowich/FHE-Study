@@ -26,6 +26,18 @@ class Evaluator:
         return out
 
 
+def fast_base_conv(a, from_qi, to_pi):
+    out = []
+    for pi in to_pi:
+        sum = 0
+        for j in range(len(a)):
+            tmp1 = (a[j] * inv_hat(j, from_qi)) % pi
+            tmp2 = hat(j, from_qi) % pi
+            sum += (tmp1*tmp2) % pi
+        out.append(sum % pi)
+    return out
+
+
 def coef_to_crt(poly_coef, primes):
     crt = [0]*(n*len(primes))
     for j in range(len(primes)):
@@ -50,7 +62,7 @@ def crt_to_coef_elm(crt_elm, primes):
     M = prod(primes)
     out = 0
     for j in range(len(crt_elm)):
-        out = out + crt_elm[j]*qi_hat(j,primes)*inv_qi_hat(j,primes)
+        out = out + crt_elm[j] * hat(j, primes) * inv_hat(j, primes)
     return out % M
 
 def coef_to_crt_elm(elm_coef, primes):
@@ -59,7 +71,7 @@ def coef_to_crt_elm(elm_coef, primes):
         out[j] = elm_coef % primes[j]
     return out
 
-def qi_hat(j, primes):
+def hat(j, primes):
     out = 1
     for i in range(len(primes)):
         if i != j:
@@ -67,9 +79,9 @@ def qi_hat(j, primes):
     return out
 
 
-def inv_qi_hat(j, primes):
+def inv_hat(j, primes):
     p = primes[j]
-    out = pow(qi_hat(j, primes), p-2, p)
+    out = pow(hat(j, primes), p - 2, p)
     return out
 
 

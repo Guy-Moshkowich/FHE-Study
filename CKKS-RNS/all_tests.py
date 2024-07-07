@@ -8,6 +8,14 @@ scheme_common = Scheme(n, qi, pi)
 
 class TestCrt(unittest.TestCase):
 
+    def test_fast_base_conv(self):
+        qi = [5,7]
+        pi = [11,13]
+        a = [0, 1] # x= 15
+        exp = [4,2]
+        out = fast_base_conv(a, qi, pi)
+        self.assertEqual(out, exp)
+
     def test_crt_to_coef(self):
         qi = [97,193]
         poly = [0, 96, 0, 1, 1, 0, 1, 96]
