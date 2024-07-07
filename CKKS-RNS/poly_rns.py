@@ -28,15 +28,54 @@ class Evaluator:
 
 def fast_base_conv(a, from_qi, to_pi):
     out = []
+    q = prod(from_qi)
     for pi in to_pi:
-        sum = 0
-        for j in range(len(a)):
-            tmp1 = (a[j] * inv_hat(j, from_qi)) % pi
+        s = 0
+        v = 0
+        for j in range(len(from_qi)):
+            tmp1 = ((a[j] * inv_hat(j, from_qi)) % from_qi[j]) % pi
             tmp2 = hat(j, from_qi) % pi
-            sum += (tmp1*tmp2) % pi
-        out.append(sum % pi)
+            s = (s + (tmp1*tmp2) % pi) % pi
+            v += ((a[j] * inv_hat(j, from_qi)) % from_qi[j])/from_qi[j]
+        v = round(v)
+        out.append(((s % pi) - (v % pi)*(q % pi)) % pi)
     return out
 
+
+def fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi):
+    q = prod(from_qi)
+    s = 0
+    v = 0
+    pi = to_pi[pi_idx]
+    for j in range(len(from_qi)):
+        a = poly_in[coef_idx + j * n]
+        tmp1 = ((a * inv_hat(j, from_qi)) % from_qi[j]) % pi
+        tmp2 = hat(j, from_qi) % pi
+        s = (s + (tmp1 * tmp2) % pi) % pi
+        v += ((a * inv_hat(j, from_qi)) % from_qi[j]) / from_qi[j]
+    v = round(v)
+    poly_out[coef_idx + pi_idx * n] = (((s % pi) - (v % pi) * (q % pi)) % pi)
+
+
+def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
+    for coef_idx in range(n):
+        for pi_idx in range(len(to_pi)):
+            fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi)
+
+
+# def fast_base_conv_poly(poly, from_qi, to_pi):
+#     n = len(poly)//len(from_qi)
+#     out = [0]*n*len(to_pi)
+#     for j in range(n):
+#         a = []
+#         for i in range(len(from_qi)):
+#             idx = j + n*i
+#             a.append(poly[idx])
+#         a_conv = fast_base_conv(a, from_qi, to_pi)
+#         for i in range(len(to_pi)):
+#             idx = j + n * i
+#             out[idx] = a_conv[i]
+#     return out
 
 def coef_to_crt(poly_coef, primes):
     crt = [0]*(n*len(primes))
@@ -49,6 +88,7 @@ def coef_to_crt(poly_coef, primes):
 
 def crt_to_coef(poly_crt, primes):
     out = []
+    n = len(poly_crt)//len(primes)
     for i in range(n):
         elm = []
         for j in range(len(primes)):
@@ -79,10 +119,14 @@ def hat(j, primes):
     return out
 
 
-def inv_hat(j, primes):
+def inv_hat(j, primes): #TODO: use inv(x,q)
     p = primes[j]
     out = pow(hat(j, primes), p - 2, p)
     return out
+
+
+def inv(x, q):
+    return pow(x, q - 2, q)
 
 
 def add(poly1_crt, poly2_crt, primes):
