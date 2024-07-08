@@ -11,7 +11,7 @@ class TestCrt(unittest.TestCase):
     def test_fast_base_conv(self):
         qi = [97, 193]
         pi = [101, 103]
-        for x in range(100*100//2): # fast_base_conv works on values below Q/2
+        for x in range(prod(qi)//2):  # fast_base_conv works on values below Q/2
             a = []
             for q in qi:
                 a.append(x % q)
