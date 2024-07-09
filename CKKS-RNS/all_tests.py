@@ -6,12 +6,25 @@ pi = [1201, 1217]
 scheme_common = Scheme(n, qi, pi)
 
 
-class TestCrt(unittest.TestCase):
+class TestAll(unittest.TestCase):
 
     def test_fast_base_conv(self):
         qi = [97, 193]
         pi = [101, 103]
         for x in range(prod(qi)//2):  # fast_base_conv works on values below Q/2
+            a = []
+            for q in qi:
+                a.append(x % q)
+            exp = []
+            for p in pi:
+                exp.append(x % p)
+            out = fast_base_conv(a, qi, pi)
+            self.assertEqual(exp, out)
+
+    def test_fast_base_conv_large_primes(self):
+        qi = [9007199255019521, 9007199255347201]
+        pi = [18014398510645249, 18014398510661633]
+        for x in range(10000):
             a = []
             for q in qi:
                 a.append(x % q)

@@ -42,25 +42,35 @@ def fast_base_conv(a, from_qi, to_pi):
     return out
 
 
-def fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi):
-    q = prod(from_qi)
+def fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi, q_mod_pi, inv_hat_qi, hat_qi_mod_pj):
     s = 0
     v = 0
     pi = to_pi[pi_idx]
     for j in range(len(from_qi)):
         a = poly_in[coef_idx + j * n]
-        tmp1 = ((a * inv_hat(j, from_qi)) % from_qi[j]) % pi
-        tmp2 = hat(j, from_qi) % pi
+        tmp1 = ((a * inv_hat_qi[j]) % from_qi[j]) % pi
+        tmp2 = hat_qi_mod_pj[j][pi_idx]
         s = (s + (tmp1 * tmp2) % pi) % pi
         v += ((a * inv_hat(j, from_qi)) % from_qi[j]) / from_qi[j]
     v = round(v)
-    poly_out[coef_idx + pi_idx * n] = (((s % pi) - (v % pi) * (q % pi)) % pi)
+    poly_out[coef_idx + pi_idx * n] = (((s % pi) - (v % pi) * (q_mod_pi[pi_idx])) % pi)
 
 
 def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
+    q = prod(from_qi)
+    q_mod_pi = [(q % pi) for pi in to_pi]
+    inv_hat_qi = [inv_hat(j, from_qi) for j in range(len(from_qi))]
+    hat_qi = [hat(j, from_qi) for j in range(len(from_qi))]
+    hat_qi_mod_pj = []
+    for hat_qi_i in hat_qi:
+        row = []
+        for pj in to_pi:
+            row.append(hat_qi_i % pj)
+        hat_qi_mod_pj.append(row)
+
     for coef_idx in range(n):
         for pi_idx in range(len(to_pi)):
-            fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi)
+            fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi, q_mod_pi,inv_hat_qi, hat_qi_mod_pj)
 
 
 # def fast_base_conv_poly(poly, from_qi, to_pi):
