@@ -7,32 +7,29 @@ scheme_common = Scheme(n, qi, pi)
 
 
 class TestAll(unittest.TestCase):
-
-    def test_fast_base_conv(self):
+    def test_tmp(self):
         qi = [97, 193]
         pi = [101, 103]
-        for x in range(prod(qi)//2):  # fast_base_conv works on values below Q/2
-            a = []
-            for q in qi:
-                a.append(x % q)
-            exp = []
-            for p in pi:
-                exp.append(x % p)
-            out = fast_base_conv(a, qi, pi)
-            self.assertEqual(exp, out)
+        # qi = [9007199255019521, 9007199255347201]
+        # pi = [18014398510645249, 18014398510661633]
+        poly_coef = [100, 200, 100, 0, 0, 0, 0, 0]  # 100+200*X+100*X^2
+        poly_in = coef_to_crt(poly_coef, qi)
+        poly_out = [0] * n * len(pi)
+        fast_base_conv_poly(poly_out, poly_in, qi, pi)
+        print('poly_out: ', poly_out)
 
-    def test_fast_base_conv_large_primes(self):
-        qi = [9007199255019521, 9007199255347201]
-        pi = [18014398510645249, 18014398510661633]
-        for x in range(10000):
-            a = []
-            for q in qi:
-                a.append(x % q)
-            exp = []
-            for p in pi:
-                exp.append(x % p)
-            out = fast_base_conv(a, qi, pi)
-            self.assertEqual(exp, out)
+    # def test_fast_base_conv(self):
+    #     qi = [97, 193]
+    #     pi = [101, 103]
+    #     for x in range(prod(qi)//2):  # fast_base_conv works on values below Q/2
+    #         a = []
+    #         for q in qi:
+    #             a.append(x % q)
+    #         exp = []
+    #         for p in pi:
+    #             exp.append(x % p)
+    #         out = fast_base_conv(a, qi, pi)
+    #         self.assertEqual(exp, out)
 
     def test_fast_base_conv_poly(self):
         qi = [97, 193]
@@ -40,6 +37,18 @@ class TestAll(unittest.TestCase):
         poly_coef = [100, 200, 100, 0, 0, 0, 0, 0]  # 100+200*X+100*X^2
         poly_in = coef_to_crt(poly_coef, qi)
         poly_out = [0]*n*len(pi)
+        fast_base_conv_poly(poly_out, poly_in, qi, pi)
+        exp = coef_to_crt(poly_coef, pi)
+        print('exp: ', exp)
+        print('poly_out: ',poly_out)
+        self.assertEqual(poly_out, exp)
+
+    def test_fast_base_conv_poly_large_primes(self):
+        qi = [9007199255019521, 9007199255347201]
+        pi = [18014398510645249, 18014398510661633]
+        poly_coef = [100, 200, 100, 0, 0, 0, 0, 0]  # 100+200*X+100*X^2
+        poly_in = coef_to_crt(poly_coef, qi)
+        poly_out = [0] * n * len(pi)
         fast_base_conv_poly(poly_out, poly_in, qi, pi)
         exp = coef_to_crt(poly_coef, pi)
         self.assertEqual(poly_out, exp)

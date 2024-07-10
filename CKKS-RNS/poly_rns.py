@@ -26,66 +26,60 @@ class Evaluator:
         return out
 
 
-def fast_base_conv(a, from_qi, to_pi):
-    out = []
-    q = prod(from_qi)
-    for pi in to_pi:
-        s = 0
-        v = 0
-        for j in range(len(from_qi)):
-            tmp1 = ((a[j] * inv_hat(j, from_qi)) % from_qi[j]) % pi
-            tmp2 = hat(j, from_qi) % pi
-            s = (s + (tmp1*tmp2) % pi) % pi
-            v += ((a[j] * inv_hat(j, from_qi)) % from_qi[j])/from_qi[j]
-        v = round(v)
-        out.append(((s % pi) - (v % pi)*(q % pi)) % pi)
-    return out
+# def fast_base_conv(a, from_qi, to_pi):
+#     out = []
+#     q = prod(from_qi)
+#     for pi in to_pi:
+#         s = 0
+#         v = 0
+#         for j in range(len(from_qi)):
+#             tmp1 = ((a[j] * inv_hat(j, from_qi)) % from_qi[j]) % pi
+#             tmp2 = hat(j, from_qi) % pi
+#             s = (s + (tmp1*tmp2) % pi) % pi
+#             v += ((a[j] * inv_hat(j, from_qi)) % from_qi[j])/from_qi[j]
+#         v = round(v)
+#         out.append(((s % pi) - (v % pi)*(q % pi)) % pi)
+#     return out
 
 
-def fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi, q_mod_pi, inv_hat_qi, hat_qi_mod_pj):
+def fast_base_conv_poly_kernel(poly_out_, poly_in_, idx, pi_idx,
+                               from_qi_, to_pi_, q_mod_pi, inv_hat_qi_mod_qi_,
+                                hat_qi_mod_pj_flat_,n):
     s = 0
     v = 0
-    pi = to_pi[pi_idx]
-    for j in range(len(from_qi)):
-        a = poly_in[coef_idx + j * n]
-        tmp1 = ((a * inv_hat_qi[j]) % from_qi[j]) % pi
-        tmp2 = hat_qi_mod_pj[j][pi_idx]
-        s = (s + (tmp1 * tmp2) % pi) % pi
-        v += ((a * inv_hat(j, from_qi)) % from_qi[j]) / from_qi[j]
-    v = round(v)
-    poly_out[coef_idx + pi_idx * n] = (((s % pi) - (v % pi) * (q_mod_pi[pi_idx])) % pi)
+    pi = to_pi_[pi_idx]
+    for j in range(len(from_qi_)):
+        a = poly_in_[idx + j * n]
+        y_j = (a * inv_hat_qi_mod_qi_[j]) % from_qi_[j]
+        tmp1= y_j % pi
+        tmp2 = hat_qi_mod_pj_flat_[pi_idx + j*len(from_qi_)]
+        tmp3 = (tmp1 * tmp2) % pi
+        s = (s + tmp3) % pi
+        v += y_j / from_qi_[j]
+    v = round(v) % pi
+    tmp4 =(v * q_mod_pi[pi_idx]) % pi
+    tmp5 = (s - tmp4) % pi
+    #print(idx, ",", pi_idx, " :::: ", idx + pi_idx * n,",",tmp5)
+    poly_out_[idx + pi_idx * n] = tmp5
 
 
 def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
     q = prod(from_qi)
     q_mod_pi = [(q % pi) for pi in to_pi]
-    inv_hat_qi = [inv_hat(j, from_qi) for j in range(len(from_qi))]
+    inv_hat_qi_mod_qi = [inv_hat(j, from_qi) for j in range(len(from_qi))]
     hat_qi = [hat(j, from_qi) for j in range(len(from_qi))]
-    hat_qi_mod_pj = []
-    for hat_qi_i in hat_qi:
-        row = []
-        for pj in to_pi:
-            row.append(hat_qi_i % pj)
-        hat_qi_mod_pj.append(row)
-
+    print('hat_qi:',hat_qi)
+    hat_qi_mod_pj_flat_ = []
+    for i in range(len(from_qi)):
+        for j in range(len(to_pi)):
+            hat_qi_mod_pj_flat_.append(hat_qi[i] % to_pi[j])
+    print(hat_qi_mod_pj_flat_)
     for coef_idx in range(n):
         for pi_idx in range(len(to_pi)):
-            fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx, from_qi, to_pi, q_mod_pi,inv_hat_qi, hat_qi_mod_pj)
+            fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx,
+                                       from_qi, to_pi, q_mod_pi,inv_hat_qi_mod_qi,
+                                       hat_qi_mod_pj_flat_,n)
 
-
-# def fast_base_conv_poly(poly, from_qi, to_pi):
-#     n = len(poly)//len(from_qi)
-#     out = [0]*n*len(to_pi)
-#     for j in range(n):
-#         a = []
-#         for i in range(len(from_qi)):
-#             idx = j + n*i
-#             a.append(poly[idx])
-#         a_conv = fast_base_conv(a, from_qi, to_pi)
-#         for i in range(len(to_pi)):
-#             idx = j + n * i
-#             out[idx] = a_conv[i]
-#     return out
 
 def coef_to_crt(poly_coef, primes):
     crt = [0]*(n*len(primes))
@@ -121,6 +115,7 @@ def coef_to_crt_elm(elm_coef, primes):
         out[j] = elm_coef % primes[j]
     return out
 
+
 def hat(j, primes):
     out = 1
     for i in range(len(primes)):
@@ -129,9 +124,9 @@ def hat(j, primes):
     return out
 
 
-def inv_hat(j, primes): #TODO: use inv(x,q)
+def inv_hat(j, primes):
     p = primes[j]
-    out = pow(hat(j, primes), p - 2, p)
+    out = inv(hat(j, primes) % p , p)
     return out
 
 
