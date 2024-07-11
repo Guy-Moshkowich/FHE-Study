@@ -16,7 +16,7 @@ class Scheme:
         self.sk_qi = self.gen_sk(Debug.POSITIVE_SK)
         self.relin_key_ax_qipi, self.relin_key_bx_qipi = self.gen_relin_key()
 
-    def gen_sk(self, debug=0):
+    def gen_sk(self, debug=0): # TODO: 11/7/24 Guy: sk with -1 values does not work. need to fix.
         if debug == Debug.POSITIVE_SK:
             # sk_coef = [0] * n
             # sk_coef[0] =  M - 1

@@ -51,19 +51,20 @@ def fast_base_conv_poly_kernel(poly_out_, poly_in_, idx, pi_idx,
     for j in range(len(from_qi_)):
         a = poly_in_[idx + j * n]
         y_j = (a * inv_hat_qi_mod_qi_[j]) % from_qi_[j]
-        tmp1= y_j % pi
+        tmp1 = y_j % pi
         tmp2 = hat_qi_mod_pj_flat_[pi_idx + j*len(from_qi_)]
         tmp3 = (tmp1 * tmp2) % pi
         s = (s + tmp3) % pi
         v += y_j / from_qi_[j]
     v = round(v) % pi
-    tmp4 =(v * q_mod_pi[pi_idx]) % pi
+    tmp4 = (v * q_mod_pi[pi_idx]) % pi
     tmp5 = (s - tmp4) % pi
     #print(idx, ",", pi_idx, " :::: ", idx + pi_idx * n,",",tmp5)
     poly_out_[idx + pi_idx * n] = tmp5
 
 
-def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
+def fast_base_conv_poly(poly_in, from_qi, to_pi):
+    poly_out = [0] * n * len(to_pi)
     q = prod(from_qi)
     q_mod_pi = [(q % pi) for pi in to_pi]
     inv_hat_qi_mod_qi = [inv_hat(j, from_qi) for j in range(len(from_qi))]
@@ -77,6 +78,7 @@ def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
             fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx,
                                        from_qi, to_pi, q_mod_pi,inv_hat_qi_mod_qi,
                                        hat_qi_mod_pj_flat_,n)
+    return poly_out
 
 
 def coef_to_crt(poly_coef, primes):
@@ -188,12 +190,7 @@ def gen_rand_poly_crt(primes):
 
 
 def mod_up(poly_qi, qi, pi):
-    poly_coef = crt_to_coef(poly_qi, qi)
-    poly_pi = [0]*len(pi)*n
-    for i in range(len(pi)):
-        for j in range(n):
-            idx = i*n+j
-            poly_pi[idx] = poly_coef[j] % pi[i]
+    poly_pi = fast_base_conv_poly(poly_qi, qi, pi)
     out = poly_qi.copy()
     out.extend(poly_pi)
     return out
