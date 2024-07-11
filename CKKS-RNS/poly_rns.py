@@ -68,12 +68,10 @@ def fast_base_conv_poly(poly_out, poly_in, from_qi, to_pi):
     q_mod_pi = [(q % pi) for pi in to_pi]
     inv_hat_qi_mod_qi = [inv_hat(j, from_qi) for j in range(len(from_qi))]
     hat_qi = [hat(j, from_qi) for j in range(len(from_qi))]
-    print('hat_qi:',hat_qi)
     hat_qi_mod_pj_flat_ = []
     for i in range(len(from_qi)):
         for j in range(len(to_pi)):
             hat_qi_mod_pj_flat_.append(hat_qi[i] % to_pi[j])
-    print(hat_qi_mod_pj_flat_)
     for coef_idx in range(n):
         for pi_idx in range(len(to_pi)):
             fast_base_conv_poly_kernel(poly_out, poly_in, coef_idx, pi_idx,

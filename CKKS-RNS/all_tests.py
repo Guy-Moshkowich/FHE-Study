@@ -53,6 +53,21 @@ class TestAll(unittest.TestCase):
         exp = coef_to_crt(poly_coef, pi)
         self.assertEqual(poly_out, exp)
 
+    def test_fast_base_conv_poly_random_large_primes(self):
+        qi = [9007199255019521, 9007199255347201]
+        pi = [18014398510645249, 18014398510661633]
+        n = 8
+        q = prod(qi)
+        num_of_tests = 30
+        for j in range(num_of_tests):
+            for i in range(n):
+                poly_coef = [random.randint(0, q//2) for _ in range(n)]
+            poly_in = coef_to_crt(poly_coef, qi)
+            poly_out = [0] * n * len(pi)
+            fast_base_conv_poly(poly_out, poly_in, qi, pi)
+            exp = coef_to_crt(poly_coef, pi)
+            self.assertEqual(poly_out, exp)
+
     def test_crt_to_coef(self):
         qi = [97,193]
         poly = [0, 96, 0, 1, 1, 0, 1, 96]
