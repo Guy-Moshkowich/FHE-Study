@@ -179,10 +179,10 @@ class TestAll(unittest.TestCase):
         P = prod(pi)
         inv_P_qi = [0] * len(qi)
         for i in range(len(qi)):
-            inv_P_qi[i] = inv(P % qi[i], qi[i])
+            inv_P_qi[i] = inv_mod(P, qi[i])
         poly_coef = [i*P+i for i in range(n)]
         poly_qipi = coef_to_crt(poly_coef, qipi)
-        out_ = mod_down(poly_qipi, qipi, qi,pi, inv_P_qi, n=8)
+        out_ = mod_down(poly_qipi, qi,pi, inv_P_qi, n=8)
         exp = [0, 1, 2, 3, 4, 5, 6, 7]
         self.assertEqual(exp, crt_to_coef(out_, qi))
 

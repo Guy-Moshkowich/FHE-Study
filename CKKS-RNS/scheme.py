@@ -18,7 +18,7 @@ class Scheme:
 
         self.inv_P_qi = [0] * len(qi)
         for i in range(len(qi)):
-            self.inv_P_qi[i] = inv(self.P % qi[i], qi[i])
+            self.inv_P_qi[i] = inv_mod(self.P, qi[i])
 
     def gen_sk(self, debug=0): # TODO: 11/7/24 Guy: sk with -1 values does not work. need to fix.
         if debug == Debug.POSITIVE_SK:
@@ -99,7 +99,7 @@ class Scheme:
         print('d2*relin_b: ', self.modulo(d2_dbg*relin_bx_dbg, QP_dbg))
 
         print('-----')
-        d2_time_evk_ax_qi = mod_down(d2_time_evk_ax_qipi, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
+        d2_time_evk_ax_qi = mod_down(d2_time_evk_ax_qipi, self.qi, self.pi, self.inv_P_qi, self.n)
         print('d2*a4 mod QP: ', crt_to_coef(d2_time_evk_ax_qipi,qipi))
         print('d2*a4 mod QP / P: ', [int(x/P_dbg)for x in crt_to_coef(d2_time_evk_ax_qipi,qipi)])
         print('d2*a4 mod Q: ', crt_to_coef(d2_time_evk_ax_qi,self.qi))
@@ -124,7 +124,7 @@ class Scheme:
 
         # B2 = d0 + mod_down(mod_up(d2) * relin_key_bx mod QP) mod Q
         mul_tmp = self.polyEval.mul(d2_qipi, relin_key_bx_qipi, qipi)
-        mod_down_tmp = mod_down(mul_tmp, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
+        mod_down_tmp = mod_down(mul_tmp, self.qi, self.pi, self.inv_P_qi, self.n)
         B2 = add(d0_qi,mod_down_tmp , self.qi)
 
         print('B2: ', crt_to_coef(B2, self.qi))
@@ -132,7 +132,7 @@ class Scheme:
         # print('B2_qi_tmp: ', B2_tmp)
 
         mul_tmp = self.polyEval.mul(d2_qipi, relin_key_ax_qipi, qipi)
-        mod_down_tmp = mod_down(mul_tmp, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
+        mod_down_tmp = mod_down(mul_tmp, self.qi, self.pi, self.inv_P_qi, self.n)
         A2 = add(d1_qi, mod_down_tmp, self.qi)
         print('A2=',crt_to_coef(A2,self.qi))
         print('B2_qi-A2_qi*sk_qi: ', crt_to_coef(sub(B2, self.polyEval.mul(A2, sk_qi_dbg, self.qi), self.qi), self.qi))

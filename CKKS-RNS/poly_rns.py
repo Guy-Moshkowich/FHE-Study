@@ -126,11 +126,11 @@ def hat(j, primes):
 
 def inv_hat(j, primes):
     p = primes[j]
-    out = inv(hat(j, primes) % p , p)
+    out = inv_mod(hat(j, primes) % p , p)
     return out
 
 
-def inv(x, q):
+def inv_mod(x, q):
     return pow(x, q - 2, q)
 
 
@@ -187,8 +187,12 @@ def mod_up(poly_qi, qi, pi, n):
     out.extend(poly_pi)
     return out
 
+def mod_down_kernel(out_, idx_coef, crt_idx, diff_, inv_P_qi_,qi_):
+    idx = crt_idx * n + idx_coef
+    out_[idx] = (diff_[idx] * inv_P_qi_[crt_idx]) % qi_[crt_idx]
 
-def mod_down(poly_qipi, qipi, qi,pi, inv_P_qi, n):
+
+def mod_down(poly_qipi, qi,pi, inv_P_qi, n):
     out_ = [0] * n * len(qi)
     poly_pi = [0]* n * len(pi)
     poly_qi = [0]* n * len(pi)
@@ -203,10 +207,10 @@ def mod_down(poly_qipi, qipi, qi,pi, inv_P_qi, n):
             idx_qi = j * n + idx_coef
             poly_qi[idx_qi] = poly_qipi[idx_qipi]
     poly_pi_qi = fast_base_conv_poly(poly_pi, pi, qi, n)
-    diff = sub(poly_qi, poly_pi_qi, qi)
+    diff_ = sub(poly_qi, poly_pi_qi, qi)
+    print('diff: ', diff_)
     for idx_coef in range(n):
-        for j in range(len(qi)):
-            idx = j * n + idx_coef
-            out_[idx] = (diff[idx]* inv_P_qi[j]) % qi[j]
+        for crt_idx in range(len(qi)):
+            mod_down_kernel(out_, idx_coef, crt_idx, diff_, inv_P_qi, qi)
     return out_
 
