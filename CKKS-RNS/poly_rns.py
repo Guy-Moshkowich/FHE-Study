@@ -44,7 +44,7 @@ class Evaluator:
 
 def fast_base_conv_poly_kernel(poly_out_, poly_in_, idx, pi_idx,
                                from_qi_, to_pi_, q_mod_pi, inv_hat_qi_mod_qi_,
-                                hat_qi_mod_pj_flat_,n):
+                                hat_qi_mod_pj_flat_, n):
     s = 0
     v = 0
     pi = to_pi_[pi_idx]
@@ -63,7 +63,7 @@ def fast_base_conv_poly_kernel(poly_out_, poly_in_, idx, pi_idx,
     poly_out_[idx + pi_idx * n] = tmp5
 
 
-def fast_base_conv_poly(poly_in, from_qi, to_pi):
+def fast_base_conv_poly(poly_in, from_qi, to_pi, n):
     poly_out = [0] * n * len(to_pi)
     q = prod(from_qi)
     q_mod_pi = [(q % pi) for pi in to_pi]
@@ -177,56 +177,36 @@ def gen_noise_crt(max_noise, primes):
 
 def gen_rand_poly_crt(primes):
     M = prod(primes)
-    # if debug:
-    #     # rnd_poly_coef = [0]*n
-    #     # rnd_poly_coef[0] = 30
-    #     # rnd_poly = coef_to_crt(rnd_poly_coef,primes)
-    #     rnd_poly_coef=[random.randint(0, M) for _ in range(n)]
-    #     rnd_poly = coef_to_crt(rnd_poly_coef, primes)
-    #     return rnd_poly
-
     poly_rand_coef = [random.randint(0, M) for _ in range(n)]
     return coef_to_crt(poly_rand_coef, primes)
 
 
-def mod_up(poly_qi, qi, pi):
-    poly_pi = fast_base_conv_poly(poly_qi, qi, pi)
+def mod_up(poly_qi, qi, pi, n):
+    poly_pi = fast_base_conv_poly(poly_qi, qi, pi, n)
     out = poly_qi.copy()
     out.extend(poly_pi)
     return out
 
 
-def mod_down_elm(elm_qipi, qipi, qi):
-    pi = qipi[-(len(qipi)-len(qi)):]
-    P = 1
-    for p in pi:
-        P = P*p
-
-    inv_P_qi = [0] * len(qi)
-    for i in range(len(qi)):
-        P_qi = P % qi[i]
-        inv_P = pow(P_qi, qi[i] - 2, qi[i])
-        inv_P_qi[i] = inv_P
-
-    out = []
-    elm_pi = elm_qipi[-len(pi):]
-    elm_P = crt_to_coef_elm(elm_pi, pi)
-    a_qi = coef_to_crt_elm(elm_P, qi)
-    for i in range(len(qi)):
-        b_qi = elm_qipi[i]
-        out.append(((b_qi - a_qi[i]) * inv_P_qi[i]) %qi[i])
-    return out
-
-
-def mod_down(poly_qipi, qipi, qi):
-    out = [0]*n*len(qi)
-    for i in range(n):
-        elm_qipi = [0]*len(qipi)
-        for j in range(len(qipi)):
-            idx = j*n+i
-            elm_qipi[j] = poly_qipi[idx]
-        elm_qi = mod_down_elm(elm_qipi, qipi, qi)
+def mod_down(poly_qipi, qipi, qi,pi, inv_P_qi, n):
+    out_ = [0] * n * len(qi)
+    poly_pi = [0]* n * len(pi)
+    poly_qi = [0]* n * len(pi)
+    for idx_coef in range(n):
+        # TODO: 14/7/24 Guy: check if it is faster to extract polynomials by primes in GPU rather in CPU.
+        for j in range(len(pi)):
+            idx_qipi = j * n + idx_coef + len(qi)*n
+            idx_pi = j * n + idx_coef
+            poly_pi[idx_pi] = poly_qipi[idx_qipi]
         for j in range(len(qi)):
-            idx = j * n + i
-            out[idx] = elm_qi[j]
-    return out
+            idx_qipi = j * n + idx_coef
+            idx_qi = j * n + idx_coef
+            poly_qi[idx_qi] = poly_qipi[idx_qipi]
+    poly_pi_qi = fast_base_conv_poly(poly_pi, pi, qi, n)
+    diff = sub(poly_qi, poly_pi_qi, qi)
+    for idx_coef in range(n):
+        for j in range(len(qi)):
+            idx = j * n + idx_coef
+            out_[idx] = (diff[idx]* inv_P_qi[j]) % qi[j]
+    return out_
+

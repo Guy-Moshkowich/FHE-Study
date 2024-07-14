@@ -11,10 +11,11 @@ class TestAll(unittest.TestCase):
     def test_fast_base_conv_poly(self):
         qi = [97, 193]
         # pi = [101, 103, 107]  # TODO: 11.7.24 Guy, does not support pi.size()!=qi.size(). need to fix.
+        # pi = [101]
         pi = [101, 103]
         poly_coef = [100, 200, 100, 0, 0, 0, 0, 0]  # 100+200*X+100*X^2
         poly_in = coef_to_crt(poly_coef, qi)
-        poly_out = fast_base_conv_poly(poly_in, qi, pi)
+        poly_out = fast_base_conv_poly(poly_in, qi, pi, n)
         exp = coef_to_crt(poly_coef, pi)
         print('exp: ', exp)
         print('poly_out: ',poly_out)
@@ -25,7 +26,7 @@ class TestAll(unittest.TestCase):
         pi = [18014398510645249, 18014398510661633]
         poly_coef = [100, 200, 100, 0, 0, 0, 0, 0]  # 100+200*X+100*X^2
         poly_in = coef_to_crt(poly_coef, qi)
-        poly_out = fast_base_conv_poly(poly_in, qi, pi)
+        poly_out = fast_base_conv_poly(poly_in, qi, pi, n)
         exp = coef_to_crt(poly_coef, pi)
         self.assertEqual(poly_out, exp)
 
@@ -39,7 +40,7 @@ class TestAll(unittest.TestCase):
             for i in range(n):
                 poly_coef = [random.randint(0, q//2) for _ in range(n)]
             poly_in = coef_to_crt(poly_coef, qi)
-            poly_out = fast_base_conv_poly(poly_in, qi, pi)
+            poly_out = fast_base_conv_poly(poly_in, qi, pi, n)
             exp = coef_to_crt(poly_coef, pi)
             self.assertEqual(poly_out, exp)
 
@@ -130,7 +131,7 @@ class TestAll(unittest.TestCase):
         pi = [101,103]
         poly = [201,202,203,204,205,206,207,208]
         poly_crt = coef_to_crt(poly, qi)
-        poly_qipi = mod_up(poly_crt,qi,pi)
+        poly_qipi = mod_up(poly_crt,qi,pi, n)
         exp = [7, 8, 9, 10, 11, 12, 13, 14, 8, 9, 10, 11, 12, 13, 14, 15, 100, 0, 1, 2, 3, 4, 5, 6, 98, 99, 100, 101,
                102, 0, 1, 2]
         self.assertEqual(poly_qipi, exp)
@@ -139,7 +140,7 @@ class TestAll(unittest.TestCase):
         qipi = qi.copy()
         qipi.extend(pi)
         P = prod(pi)
-        sk_qipi = mod_up(scheme_common.sk_qi, scheme_common.qi, scheme_common.pi)
+        sk_qipi = mod_up(scheme_common.sk_qi, scheme_common.qi, scheme_common.pi, n)
         relin_key_ax = scheme_common.relin_key_ax_qipi
         relin_key_bx = scheme_common.relin_key_bx_qipi
         sk_sqr_qipi = scheme_common.polyEval.mul(sk_qipi, sk_qipi, scheme_common.qipi)
@@ -160,7 +161,6 @@ class TestAll(unittest.TestCase):
     def test_he_add(self):
         qi = [97, 193]
         scheme = Scheme(n, qi)
-        sk_qi = scheme.gen_sk(Debug.POSITIVE_SK)
         pt1_qi = coef_to_crt([1, 2, 3, 4, 5, 6, 7, 8], qi)
         pt2_qi = coef_to_crt([9, 10, 11, 12, 13, 14, 15, 16], qi)
         exp_qi = [10, 12, 14, 16, 18, 20, 22, 24]
@@ -170,25 +170,21 @@ class TestAll(unittest.TestCase):
         res_dec_qi = scheme.decrypt(res_ax, res_bx)
         self.assertEqual(crt_to_coef(res_dec_qi,qi), exp_qi)
 
-    def test_mod_down_elm(self):
-        qi = [97, 193]
-        qipi = [97, 193, 101, 103]
-        P = 101*103
-        elm_coef = 2*P+2
-        elm_qipi = coef_to_crt_elm(elm_coef, qipi)
-        elm_qi = mod_down_elm(elm_qipi, qipi, qi)
-        exp = round(elm_coef/P)
-        self.assertEqual(crt_to_coef_elm(elm_qi, qi), exp)
 
     def test_mod_down(self):
+        n = 8
         qi = [97, 193]
+        pi = [101,103]
         qipi = [97, 193, 101, 103]
-        P=101*103
-        poly_coef = [i*P+10*i for i in range(n)]
+        P = prod(pi)
+        inv_P_qi = [0] * len(qi)
+        for i in range(len(qi)):
+            inv_P_qi[i] = inv(P % qi[i], qi[i])
+        poly_coef = [i*P+i for i in range(n)]
         poly_qipi = coef_to_crt(poly_coef, qipi)
-        poly_qi = mod_down(poly_qipi, qipi, qi)
+        out_ = mod_down(poly_qipi, qipi, qi,pi, inv_P_qi, n=8)
         exp = [0, 1, 2, 3, 4, 5, 6, 7]
-        self.assertEqual(exp, crt_to_coef(poly_qi, qi))
+        self.assertEqual(exp, crt_to_coef(out_, qi))
 
     def test_he_mul(self):
         qipi = qi.copy()

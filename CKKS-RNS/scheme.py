@@ -16,6 +16,10 @@ class Scheme:
         self.sk_qi = self.gen_sk(Debug.POSITIVE_SK)
         self.relin_key_ax_qipi, self.relin_key_bx_qipi = self.gen_relin_key()
 
+        self.inv_P_qi = [0] * len(qi)
+        for i in range(len(qi)):
+            self.inv_P_qi[i] = inv(self.P % qi[i], qi[i])
+
     def gen_sk(self, debug=0): # TODO: 11/7/24 Guy: sk with -1 values does not work. need to fix.
         if debug == Debug.POSITIVE_SK:
             # sk_coef = [0] * n
@@ -77,7 +81,7 @@ class Scheme:
         print('a2 mod Q: ', self.modulo(ax2_dbg, Q_dbg))
         print('-----')
 
-        d2_qipi = mod_up(d2_qi, self.qi, self.pi)
+        d2_qipi = mod_up(d2_qi, self.qi, self.pi, self.n)
         print('d2 mod QP: ', crt_to_coef(d2_qi,self.qi))
         print('-----')
         relin_ax_dbg = Polynomial(crt_to_coef(relin_key_ax_qipi, qipi))
@@ -95,7 +99,7 @@ class Scheme:
         print('d2*relin_b: ', self.modulo(d2_dbg*relin_bx_dbg, QP_dbg))
 
         print('-----')
-        d2_time_evk_ax_qi = mod_down(d2_time_evk_ax_qipi, qipi, self.qi)
+        d2_time_evk_ax_qi = mod_down(d2_time_evk_ax_qipi, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
         print('d2*a4 mod QP: ', crt_to_coef(d2_time_evk_ax_qipi,qipi))
         print('d2*a4 mod QP / P: ', [int(x/P_dbg)for x in crt_to_coef(d2_time_evk_ax_qipi,qipi)])
         print('d2*a4 mod Q: ', crt_to_coef(d2_time_evk_ax_qi,self.qi))
@@ -119,13 +123,17 @@ class Scheme:
         print('mul(d2_qipi,relin_key_bx_qipi,qipi): ', self.polyEval.mul(d2_qipi, relin_key_bx_qipi, qipi))
 
         # B2 = d0 + mod_down(mod_up(d2) * relin_key_bx mod QP) mod Q
-        B2 = add(d0_qi, mod_down(self.polyEval.mul(d2_qipi, relin_key_bx_qipi, qipi), qipi, self.qi), self.qi)
+        mul_tmp = self.polyEval.mul(d2_qipi, relin_key_bx_qipi, qipi)
+        mod_down_tmp = mod_down(mul_tmp, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
+        B2 = add(d0_qi,mod_down_tmp , self.qi)
 
         print('B2: ', crt_to_coef(B2, self.qi))
         print('B2_qi: ', B2)
         # print('B2_qi_tmp: ', B2_tmp)
 
-        A2 = add(d1_qi, mod_down(self.polyEval.mul(d2_qipi, relin_key_ax_qipi, qipi), qipi, self.qi), self.qi)
+        mul_tmp = self.polyEval.mul(d2_qipi, relin_key_ax_qipi, qipi)
+        mod_down_tmp = mod_down(mul_tmp, qipi, self.qi, self.pi, self.inv_P_qi, self.n)
+        A2 = add(d1_qi, mod_down_tmp, self.qi)
         print('A2=',crt_to_coef(A2,self.qi))
         print('B2_qi-A2_qi*sk_qi: ', crt_to_coef(sub(B2, self.polyEval.mul(A2, sk_qi_dbg, self.qi), self.qi), self.qi))
         print('A2_qi*sk_qi: ', self.polyEval.mul(A2, sk_qi_dbg, self.qi))
@@ -171,7 +179,7 @@ class Scheme:
     def gen_relin_key(self):
         P = prod(self.pi)
         ax_qipi = gen_rand_poly_crt(self.qipi)
-        sk_qipi = mod_up(self.sk_qi, self.qi, self.pi)
+        sk_qipi = mod_up(self.sk_qi, self.qi, self.pi, n)
         ax_time_sk_qipi = self.polyEval.mul(ax_qipi, sk_qipi, self.qipi)
         sk_sqr_qipi = self.polyEval.mul(sk_qipi, sk_qipi, self.qipi)
         sk_sqr_times_p_qipi = mul_scalar(P, sk_sqr_qipi, self.qipi)
