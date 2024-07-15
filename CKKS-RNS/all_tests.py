@@ -196,15 +196,15 @@ class TestAll(unittest.TestCase):
         # print("sk_qi: ", sk_qi)
         # print("sk_coef: ", crt_to_coef(sk_qi, qi))
 
-        # pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
-        # pt2_coef = [0, 0, 30, 0, 0, 0, 0, 0]
-        # pt1_qi = coef_to_crt(pt1_coef, qi)
-        # pt2_qi = coef_to_crt(pt2_coef, qi)
+        pt1_coef = [0, 200, 0, 0, 0, 0, 0, 0]
+        pt2_coef = [0, 0, 30, 0, 0, 0, 0, 0]
+        pt1_qi = coef_to_crt(pt1_coef, qi)
+        pt2_qi = coef_to_crt(pt2_coef, qi)
 
-        pt1_qi = gen_rand_poly_crt(qi)
-        pt2_qi = gen_rand_poly_crt(qi)
-        pt1_coef = crt_to_coef(pt1_qi,qi)
-        pt2_coef = crt_to_coef(pt2_qi,qi)
+        # pt1_qi = gen_rand_poly_crt(qi)
+        # pt2_qi = gen_rand_poly_crt(qi)
+        # pt1_coef = crt_to_coef(pt1_qi,qi)
+        # pt2_coef = crt_to_coef(pt2_qi,qi)
 
         print("pt1_qi: ", pt1_qi)
         print("pt2_qi: ", pt2_qi)

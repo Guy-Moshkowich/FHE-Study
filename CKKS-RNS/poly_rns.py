@@ -187,6 +187,7 @@ def mod_up(poly_qi, qi, pi, n):
     out.extend(poly_pi)
     return out
 
+
 def mod_down_kernel(out_, idx_coef, crt_idx, diff_, inv_P_qi_,qi_):
     idx = crt_idx * n + idx_coef
     out_[idx] = (diff_[idx] * inv_P_qi_[crt_idx]) % qi_[crt_idx]
